@@ -21,7 +21,8 @@ tools: ["read", "search"]
    - **패턴 준수**: `FoundryChatClient` + `Agent` + 빌더 패턴, 비동기 구조가 인스트럭션과 일치하는가
    - **보안**: 환경변수 하드코딩, 입력값 미검증, 민감정보 노출이 없는가
    - **에러 처리**: 필수 환경변수 검증, Azure API 호출 실패에 대한 처리가 있는가
-   - **워크플로우 정합성**: GroupChat `max_rounds` 설정 여부, Sequential/Concurrent 참여자 목록 완결성
+   - **워크플로우 정합성**: GroupChat `max_rounds` 설정 여부, 참여자 목록 완결성,
+     `intermediate_output_from`으로 실습에 필요한 중간 결과가 노출되는지
    - **한국어 품질**: docstring, 주석, 사용자 메시지가 자연스러운가
 
 ## 출력 규칙

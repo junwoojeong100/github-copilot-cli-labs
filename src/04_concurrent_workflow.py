@@ -88,7 +88,8 @@ async def main():
         # ── 3단계: 동시 워크플로우 구성 ──
         # ConcurrentBuilder가 모든 참여자에게 같은 입력을 병렬로 전달합니다
         workflow = ConcurrentBuilder(
-            participants=[security_agent, performance_agent, ux_agent]
+            participants=[security_agent, performance_agent, ux_agent],
+            intermediate_output_from=[security_agent, performance_agent, ux_agent],
         ).build()
 
         # ── 4단계: 동시 리뷰 결과 스트리밍 출력 ──

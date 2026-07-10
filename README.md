@@ -25,14 +25,15 @@
 | **GitHub Copilot 구독** | 필수 | CLI 사용 권한 | <https://github.com/features/copilot> |
 | **GitHub Copilot CLI** | 필수 | 터미널 AI 에이전트 | `npm install -g @github/copilot` |
 | **Node.js 22+** | 필수 | CLI 런타임 (+ `npx` MCP 서버) | `node --version` · <https://nodejs.org> |
-| **이 저장소 클론** | 필수 | `.github/`·`.copilot/` 설정을 실습 대상으로 사용 | `git clone <repo>` |
-| **GitHub PAT** | 선택 | `github` MCP·이슈/PR 작업 시 (실습 4) | <https://github.com/settings/tokens> |
+| **이 저장소 클론** | 필수 | `.github/` 설정을 실습 대상으로 사용 | `git clone <repo>` |
+| **Copilot용 PAT** | 선택 | 브라우저 로그인 대신 CLI 인증 | Fine-grained PAT + `Copilot Requests` 권한 |
 | **GitHub CLI(`gh`)** | 선택 | 커밋·PR 실습 시 (실습 7) | `gh auth login` · <https://cli.github.com> |
-| **Azure CLI** | 선택 | `azure` MCP 서버 인증 시 (실습 4) | `az version` → `az login` |
-| **Python 3.14.5** | 선택 | 생성 코드 문법 검증 (실습 5) | `python3 --version` |
+| **Azure CLI** | 선택 | `azure-lab` MCP 서버 인증 시 (실습 4) | `az version` → `az login` |
+| **Python 3.14.x** | 선택 | 생성 코드 문법 검증 (실습 5) | `python3 --version` |
 
-> 💡 **선택 항목은 없어도 완주할 수 있습니다.** PAT·Azure·Python 없이도 인증이 필요 없는
-> `microsoftLearn` MCP 서버와 `/diff`·`reviewer` 검토만으로 모든 실습을 따라갈 수 있습니다.
+> 💡 **선택 항목은 없어도 완주할 수 있습니다.** Azure·Python 없이도 인증이 필요 없는
+> Microsoft Learn MCP 서버와 `/diff`·`reviewer` 검토만으로 모든 실습을 따라갈 수 있습니다.
+> Copilot CLI 자체 인증은 브라우저 OAuth 로그인을 권장합니다.
 
 ## 목차
 
@@ -123,7 +124,7 @@ VS Code Agent 모드와 Copilot CLI는 **둘 다 에이전틱**(다단계 자율
 | 항목 | 🖥️ VS Code Copilot Chat | 💻 Copilot CLI |
 |------|---|---|
 | **실행 위치** | 에디터(GUI) 내 채팅·인라인 | 터미널 — SSH·서버·CI·헤드리스 가능 |
-| **상호작용 모드** | Ask · Edit · Agent (모드 선택) | 단일 대화 + `Shift+Tab`로 Interactive ↔ Plan, `--autopilot` |
+| **상호작용 모드** | Ask · Edit · Agent (모드 선택) | `Shift+Tab`로 Interactive → Plan → Autopilot 순환 |
 | **공유 설정** | `copilot-instructions.md`, `instructions/`, `agents/`, `skills/`, `prompts/`, `AGENTS.md` | 위 + **`CLAUDE.md`·`GEMINI.md`** 인식(Claude/Gemini 호환) |
 | **에이전트 호출** | 에이전트 피커 | `/agent` · `--agent <name>` · 자연어로 이름 언급 |
 | **프롬프트 파일** | `/프롬프트명` (채팅) | 직접 호출 없음 → 내용을 자연어로 요청 |
@@ -144,15 +145,15 @@ VS Code Agent 모드와 Copilot CLI는 **둘 다 에이전틱**(다단계 자율
 |------|----------|--------|
 | **슬래시 커맨드** | 세션 제어 명령 | `/help`로 전체 보기 — `/plan`·`/model`·`/mcp`·`/agent`·`/diff`·`/review` 등 |
 | **멘션** | 입력 보조 | `@`파일 · `#`이슈/PR · `!`로컬 셸 명령 직접 실행 |
-| **모드** | 진행 방식 | Interactive(단계 승인) · Plan(먼저 계획) · Autopilot(끝까지 자동) |
+| **모드** | 진행 방식 | Interactive(대화형) · Plan(계획 우선) · Autopilot(완료까지 연속 진행) |
 | **Custom Agent** | 역할·도구가 제한된 전용 에이전트 | 내장(Explore·Task·Research 등) + `.github/agents/*.agent.md` 커스텀, `--agent`로 실행 |
 | **Skill** | 주입하는 전문 지식·패턴 묶음 | `.github/skills/*/SKILL.md` — 관련 작업 감지 시 자동 로드, `/skills` 관리 |
 | **Instructions** | 항상/조건부 적용 규칙 | `copilot-instructions.md`(전역) + `instructions/*`(`applyTo` 글롭) + `AGENTS.md` |
-| **MCP 서버** | 외부 시스템을 도구로 연결 | GitHub MCP 기본 내장, `.copilot/mcp-config.json`로 추가(Azure·Learn 등) |
+| **MCP 서버** | 외부 시스템을 도구로 연결 | GitHub MCP 기본 내장, `.mcp.json` 또는 `.github/mcp.json`으로 추가 |
 | **LSP** | 코드 인텔리전스 | `.github/lsp.json`(이 저장소엔 미설정 — 직접 추가) — go-to-definition·hover·진단 |
 | **서브에이전트** | 작업 병렬 위임 | 모델이 자동 위임하거나 `/fleet`로 병렬 실행, `/tasks`로 관리 |
 | **세션/컨텍스트** | 대화 관리 | `/compact`·`/context`·`/usage`·`/resume`·`copilot --continue`·`/share`·`/memory` |
-| **자동화** | 손 안 대고 진행 | `--autopilot`·`/delegate`(클라우드 PR)·`-p`(비대화형/CI) |
+| **자동화** | 손 안 대고 진행 | `--autopilot`·`/every`·`/after`(실험적)·`/delegate`·`-p` |
 | **코드 작업** | 개발 보조 | `/diff`·`/review`·`/pr`·`/research`·`/ide` |
 
 ---
@@ -173,7 +174,7 @@ VS Code Agent 모드와 Copilot CLI는 **둘 다 에이전틱**(다단계 자율
 node --version       # 먼저 v22 이상인지 확인
 npm install -g @github/copilot
 # 또는 macOS/Linux: curl -fsSL https://gh.io/copilot-install | bash
-# 또는: brew install copilot-cli   /   winget install GitHub.Copilot
+# 또는: brew install --cask copilot-cli   /   winget install GitHub.Copilot
 
 copilot --version   # 1.0.x 출력
 ```
@@ -184,7 +185,7 @@ copilot --version   # 1.0.x 출력
 ### 2) 실행 · 폴더 신뢰 · 로그인
 
 ```bash
-# 이 저장소에서 실행해야 .github/·.copilot/ 설정을 함께 읽습니다
+# 이 저장소에서 실행해야 .github/ 설정을 함께 읽습니다
 cd copilot-cli-labs
 copilot
 ```
@@ -197,8 +198,9 @@ copilot
 # 브라우저가 열리고 device code 인증을 안내합니다. 완료하면 세션으로 돌아옵니다.
 ```
 
-> 💡 PAT로 인증하려면 토큰을 환경변수로 두고 실행합니다(우선순위 `COPILOT_GITHUB_TOKEN > GH_TOKEN >
-> GITHUB_TOKEN`). 자세히는 [설정 파일·환경변수](#설정-파일환경변수).
+> 💡 PAT로 인증하려면 **개인 계정에서 만든 fine-grained PAT**에 `Copilot Requests` 권한을 부여하고
+> 환경변수로 전달합니다(우선순위 `COPILOT_GITHUB_TOKEN > GH_TOKEN > GITHUB_TOKEN`). Classic PAT
+> (`ghp_` 접두사)는 Copilot CLI 인증에 사용할 수 없습니다.
 
 ✅ **확인**: 배너가 뜨고 로그인 상태가 되면 완료입니다. 막히면 [트러블슈팅](#트러블슈팅)을 보세요.
 
@@ -223,7 +225,7 @@ copilot
 
 | 동작 | 방법 |
 |------|------|
-| Plan(계획 우선) ↔ Interactive 전환 | `Shift+Tab` |
+| Interactive → Plan → Autopilot 순환 | `Shift+Tab` |
 | 모델 변경 | `/model` (Claude·GPT-5·Gemini 등, `auto` 가능) |
 | 추론 과정 표시 토글 | `Ctrl+T` |
 | 전체 슬래시 커맨드 | `/help` |
@@ -246,7 +248,7 @@ Plan 모드에서는 코드를 바꾸기 전에 **구현 계획**을 먼저 제�
 > 💡 `@`는 파일, `#`는 이슈/PR, `!`는 로컬 셸 명령을 가리킵니다. `!`로 시작하면 모델을 거치지 않고
 > 바로 실행되므로 `!git status` 같은 확인 작업이 빠릅니다.
 
-✅ **확인**: 파일 멘션(`@`)에 대한 한국어 설명을 받고, `Shift+Tab`으로 Plan↔Interactive를 오가며,
+✅ **확인**: 파일 멘션(`@`)에 대한 한국어 설명을 받고, `Shift+Tab`으로 세 모드를 순환하며,
 `/model`로 모델을 한 번 바꿔 봤다면 완료입니다.
 
 ## 실습 2. `.github/` 설정으로 Copilot 조종하기
@@ -259,6 +261,7 @@ Copilot은 작업 디렉토리의 `.github/` 설정과 `AGENTS.md`를 읽어 **�
 ```text
 .github/
 ├── copilot-instructions.md      # 전역 페르소나·코딩 스타일·프로젝트 규칙
+├── mcp.json                      # Workspace MCP 서버(Azure · Microsoft Learn)
 ├── instructions/                # 경로/언어별 세부 규칙 (applyTo 글롭)
 │   ├── python.instructions.md
 │   ├── azure.instructions.md
@@ -348,8 +351,8 @@ copilot --agent debugger                    # 환경/런타임 진단
 > reviewer 에이전트로 src/04_concurrent_workflow.py를 검토해줘
 ```
 
-`/agent`를 입력하면 이 저장소의 7개 에이전트(+CLI 내장 에이전트)가 목록으로 나타나고, 화살표로
-선택합니다.
+`/agent`를 입력하면 이 저장소의 7개 에이전트와 직접 선택 가능한 내장 에이전트가 목록으로 나타납니다.
+Rubber duck처럼 자동으로만 호출되는 일부 내장 에이전트는 선택 목록에 보이지 않을 수 있습니다.
 
 ✅ **확인**: `/agent` 목록에 7개 에이전트가 보이고, `reviewer`가 읽기 전용으로 코드 리뷰를 내놓으면
 완료입니다. (패턴별 팀 구성·협업 흐름은 [Custom Agent·Skill 만들기](#custom-agentskill-만들기) 참고)
@@ -358,72 +361,72 @@ copilot --agent debugger                    # 환경/런타임 진단
 
 > 🎯 MCP 서버를 연결해 외부 도구를 쓴다 · ⏱️ 약 10분
 
-**MCP(Model Context Protocol)** 서버를 붙이면 Copilot이 외부 시스템을 **도구**로 사용합니다. Copilot CLI에는
-GitHub MCP 기능이 **기본 제공**되며, 이 저장소는 `.copilot/mcp-config.json`에 `github`(명시 PAT 인증)·`azure`·
-`microsoftLearn` 3개 서버를 리포 설정으로 선언해 둡니다.
+**MCP(Model Context Protocol)** 서버를 붙이면 Copilot이 외부 시스템을 **도구**로 사용합니다. GitHub MCP
+서버는 CLI에 기본 내장되어 별도 PAT나 설정 블록이 필요 없습니다. 이 저장소의 `.github/mcp.json`은
+추가 실습용 서버 두 개만 선언합니다.
 
 ```json
 {
   "mcpServers": {
-    "github":        { "type": "http",  "url": "https://api.githubcopilot.com/mcp/",
-                       "headers": { "Authorization": "Bearer ${GITHUB_PERSONAL_ACCESS_TOKEN}" }, "tools": ["*"] },
-    "azure":         { "type": "local", "command": "npx",
-                       "args": ["-y", "@azure/mcp@latest", "server", "start"], "tools": ["*"] },
-    "microsoftLearn":{ "type": "http",  "url": "https://learn.microsoft.com/api/mcp", "tools": ["*"] }
+    "azure-lab": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@azure/mcp@latest", "server", "start"],
+      "tools": ["*"]
+    },
+    "microsoft-learn-lab": {
+      "type": "http",
+      "url": "https://learn.microsoft.com/api/mcp",
+      "tools": ["*"]
+    }
   }
 }
 ```
 
 | 서버 | 용도 | 인증 |
 |------|------|------|
-| **github** | 이슈·PR·리포 탐색/조작 | PAT — `GITHUB_PERSONAL_ACCESS_TOKEN` |
-| **azure** | 구독 내 Azure 리소스 조회·관리 | `az login` 세션 |
-| **microsoftLearn** | Microsoft/Azure 공식 문서·코드 샘플 검색 | 불필요 |
+| **GitHub MCP(내장)** | 이슈·PR·리포 탐색/조작 | Copilot CLI 로그인 |
+| **azure-lab** | 구독 내 Azure 리소스 조회·관리 | `az login` 세션 |
+| **microsoft-learn-lab** | Microsoft/Azure 공식 문서·코드 샘플 검색 | 불필요 |
 
 ```bash
-# (선택) github·azure 서버를 쓸 때만 인증
-export GITHUB_PERSONAL_ACCESS_TOKEN=ghp_xxx   # repo·read:org 등 최소 권한 PAT 권장
+# Workspace 설정 인식 확인
+copilot mcp list
+
+# (선택) Azure MCP를 사용할 때만 인증
 az login
 
 copilot
-> /mcp        # 등록된 서버 목록·상태 확인 ( /mcp add 로 새 서버 추가 )
+# 세션 안에서 /mcp를 입력해 서버를 관리하고 상태 확인
 ```
 
 ```text
-> /mcp
-  github          http    ✓ connected
-  azure           local   ✓ connected
-  microsoftLearn  http    ✓ connected
+Workspace servers:
+  azure-lab (local)
+  microsoft-learn-lab (http)
 ```
 
-PAT·Azure 로그인을 건너뛴 경우에는 다음처럼 `microsoftLearn`만 연결되어도 정상입니다.
+사용자 설정이나 플러그인이 있으면 별도 섹션이 추가될 수 있습니다. 내장 GitHub MCP는 Workspace 서버가
+아니므로 위 목록에 없어도 정상입니다.
 
-```text
-> /mcp
-  github          http    인증 필요 / disconnected
-  azure           local   인증 필요 / disconnected
-  microsoftLearn  http    ✓ connected
-```
-
-> 💡 **인증 없이 진행 가능**: PAT·Azure를 설정하지 않으면 위 `github`·`azure`는 `connected`로 보이지
-> 않을 수 있지만, 인증이 필요 없는 `microsoftLearn`만으로 이 실습을 끝낼 수 있습니다. 또한 Copilot CLI는
-> **GitHub MCP를 기본 내장**하므로 `github` 블록이 없어도 기본 GitHub 기능은 동작합니다(블록을 유지하면
-> `GITHUB_PERSONAL_ACCESS_TOKEN`이 있어야 인증 오류가 나지 않습니다).
+> 💡 **Azure 인증 없이 진행 가능**: `azure-lab`을 사용하지 않아도
+> `microsoft-learn-lab`만으로 이 실습을 끝낼 수 있습니다. Azure 설정은 목록에 나타나더라도 실제 도구
+> 호출 때 인증이 필요할 수 있으므로, 최종 확인은 아래 검색 요청으로 합니다.
 >
-> ⚠️ `tools: ["*"]`는 모든 도구를 허용하므로, 특히 `azure`는 **조회뿐 아니라 변경/삭제**도 가능합니다
+> ⚠️ `tools: ["*"]`는 모든 도구를 허용하므로, 특히 `azure-lab`은 **조회뿐 아니라 변경/삭제**도 가능합니다
 > (실제 범위는 `az login` 계정의 RBAC로 제한되고 실행 전 승인을 받습니다). 읽기 전용만 노출하려면
 > `tools`를 도구명으로 좁히세요.
 
-인증이 필요 없는 `microsoftLearn` 서버로 실제 공식 문서를 검색해 봅니다.
+인증이 필요 없는 `microsoft-learn-lab` 서버로 실제 공식 문서를 검색해 봅니다.
 
 ```text
 > Microsoft Learn에서 'Agent Framework Concurrent orchestration' 문서를 찾아 핵심을 한국어로 요약해줘
 ```
 
-Copilot이 `microsoftLearn` MCP 도구를 호출해 공식 문서를 가져와 요약합니다(도구 호출 시 승인을 물을 수 있음).
+Copilot이 Microsoft Learn MCP 도구를 호출해 공식 문서를 가져와 요약합니다(도구 호출 시 승인을 물을 수 있음).
 
-✅ **확인**: `/mcp`에 서버가 `connected`로 보이고, 위 요청에 Copilot이 Learn 문서를 검색해 요약하면
-완료입니다. (PAT·Azure 없이 `microsoftLearn`만으로 가능)
+✅ **확인**: `copilot mcp list`에 두 Workspace 서버가 보이고, 위 요청에 Copilot이 Learn 문서를 검색해 요약하면
+완료입니다. (Azure 없이 Microsoft Learn 서버만으로 가능)
 
 ## 실습 5. 바이브 코딩 — 설정만으로 코드 생성·리뷰
 
@@ -451,8 +454,9 @@ Copilot이 `microsoftLearn` MCP 도구를 호출해 공식 문서를 가져와 �
 > 리뷰에서 지적된 부분을 반영해서 수정해줘   # 생성 → 리뷰 → 수정 사이클을 한 바퀴 돌려 봅니다
 ```
 
-`/diff`에는 **대략 다음 두 가지**가 보여야 합니다 — ① 새 `Agent` 정의, ② `ConcurrentBuilder`의
-`participants`에 그 에이전트 추가. (모델 출력이라 문구는 조금씩 다를 수 있습니다.)
+`/diff`에는 **대략 다음 세 가지**가 보여야 합니다 — ① 새 `Agent` 정의, ② `ConcurrentBuilder`의
+`participants`에 그 에이전트 추가, ③ `intermediate_output_from`에도 같은 에이전트 추가.
+(모델 출력이라 문구는 조금씩 다를 수 있습니다.)
 
 ```python
 cost_agent = Agent(
@@ -466,11 +470,13 @@ cost_agent = Agent(
 )
 # ...
 workflow = ConcurrentBuilder(
-    participants=[security_agent, performance_agent, ux_agent, cost_agent]
+    participants=[security_agent, performance_agent, ux_agent, cost_agent],
+    intermediate_output_from=[security_agent, performance_agent, ux_agent, cost_agent],
 ).build()
 ```
 
-새 `Agent` 정의만 생기고 `participants`에서 빠지면 병렬 검토에 합류하지 못하므로 **둘 다** 있어야 합니다.
+새 `Agent` 정의만 생기고 `participants`에서 빠지면 병렬 검토에 합류하지 못합니다. 또한 현재 SDK에서
+참여자별 검토 내용을 스트리밍하려면 같은 목록을 `intermediate_output_from`에도 포함해야 합니다.
 
 (선택, Python 설치 시) 문법만 검증 — Azure 불필요:
 
@@ -490,27 +496,35 @@ python3 -m py_compile src/04_concurrent_workflow.py   # 오류 없으면 아무 
 | 기능 | 명령 | 설명 |
 |------|------|------|
 | **Plan 모드** | `Shift+Tab` 또는 `/plan` | 실행 전 구현 계획을 먼저 수립 |
-| **Autopilot** | `copilot --autopilot` 또는 `/autopilot` | 매 단계 승인 없이 끝까지 자동 진행 |
+| **Autopilot** | `copilot --autopilot` 또는 `/autopilot` | 완료 조건까지 후속 턴을 이어서 실행 |
+| **권한 자동 승인** | `/allow-all`, `--allow-all`, `--yolo` | 도구·경로·URL 승인 생략(Autopilot과 별도) |
 | **병렬 서브에이전트** | `/fleet` | 여러 서브에이전트를 병렬 실행, `/tasks`로 관리 |
+| **예약 실행(실험적)** | `/every <주기> <프롬프트>` · `/after <지연> <프롬프트>` | 세션이 열린 동안 반복/일회성 프롬프트 예약 |
 | **클라우드 위임** | `/delegate` | 세션을 GitHub에 보내 Copilot이 PR 생성 |
 | **비대화형 실행** | `copilot -p "..." --allow-all-tools` | 스크립트·CI·cron 등에서 한 번 실행 후 종료 |
 | **세션 재개** | `copilot --continue` / `/resume` | 직전/특정 세션을 컨텍스트째 이어서 |
 
 > ℹ️ `/sandbox`(로컬 샌드박스)와 `copilot --cloud`(클라우드 샌드박스)는 **공개 미리보기**라 버전·계정에
-> 따라 노출이 다를 수 있고, 클라우드 샌드박스는 조직/엔터프라이즈 정책 활성화가 필요합니다(현재 지원
-> 여부는 `/help`로 확인). 정기 실행이 필요하면 OS 스케줄러(cron·작업 스케줄러)로 위 `copilot -p`를 호출하세요.
+> 따라 노출이 다를 수 있고, 클라우드 샌드박스는 조직/엔터프라이즈 정책 활성화가 필요합니다. 현재 지원
+> 여부는 `/help`로 확인하세요.
 
 ```text
 > /plan
 > 새 RAG 예제를 추가하는 작업을 단계로 나눠줘
-# 계획이 마음에 들면 Shift+Tab 으로 Interactive 전환 후 실행하거나, --autopilot 로 끝까지 자동 진행
+# 계획이 마음에 들면 Shift+Tab으로 다음 모드로 전환해 실행
+> /experimental on
+> /every 1h 프런트엔드 테스트를 실행하고 실패만 보고해줘
+> /after 20m 현재 작업 상태를 요약해줘
 ```
 
-> ⚠️ Autopilot·`--yolo`는 파일 변경·명령을 자동 실행합니다. **신뢰할 수 있는 환경**에서만 쓰고,
-> 위험한 작업은 `/sandbox enable`(로컬 샌드박스)이나 `copilot --cloud`(클라우드)에서 시도하세요.
+> ⚠️ Autopilot은 작업을 연속 진행하지만 도구 권한을 자동 승인하지는 않습니다. `/allow-all`·`--yolo`를
+> 함께 사용할 때만 승인까지 생략되므로 **신뢰할 수 있는 환경**에서만 사용하세요.
+>
+> `/every`와 `/after`는 현재 실험적 기능입니다. `/experimental on` 또는 시작 옵션 `--experimental`이
+> 필요하며, 예약한 세션이 열려 있을 때만 실행됩니다.
 
-✅ **확인**: `/plan`으로 계획을 받고, `/fleet`·`/tasks`·`/delegate` 같은 자동화 명령이 무엇인지 이해했다면
-완료입니다.
+✅ **확인**: `/plan`으로 계획을 받고, Autopilot과 권한 자동 승인의 차이 및 `/every`·`/after`·`/fleet`·
+`/tasks`·`/delegate`의 용도를 이해했다면 완료입니다.
 
 ## 실습 7. 가드레일(AGENTS.md)로 안전하게 커밋·PR
 
@@ -579,8 +593,14 @@ tools: [read, edit]
 1. 대상 파일을 읽고 → 2. docstring을 추가하고 → 3. 변경을 요약합니다.
 ```
 
-**2) 만든 에이전트를 실행합니다.** 새 에이전트는 **새 세션에서 로드**되므로, 현재 세션 안에서 파일을
-만들었다면 `/exit`로 나간 뒤(또는 새 터미널에서) 저장소 루트에서 실행합니다.
+**2) 만든 에이전트를 실행합니다.** 세션에서 `/agent doc_writer`로 선택하거나 새 프로세스를 시작합니다.
+목록에 즉시 보이지 않으면 `/restart`로 현재 세션을 유지한 채 CLI를 다시 로드합니다.
+
+```text
+> /agent doc_writer
+```
+
+또는:
 
 ```bash
 copilot --agent doc_writer
@@ -634,8 +654,10 @@ copilot --agent doc_writer
 | `/delegate` | 세션을 GitHub에 보내 Copilot이 PR 생성 |
 | `/fleet` | 병렬 서브에이전트 실행 모드 |
 | `/autopilot` | Autopilot 모드 토글 |
-| `/tasks` · `/sidekicks` | 백그라운드 태스크 / 실행 중 서브에이전트 관리 |
+| `/tasks` | 서브에이전트와 셸 명령 태스크 조회·관리 |
+| `/subagents` | 기본·에이전트별 서브에이전트 모델 설정 |
 | `/plan` | 코딩 전 구현 계획 작성 |
+| `/every` · `/after` | 반복 또는 일회성 프롬프트 예약(실험 모드, 세션 실행 중에만 동작) |
 
 **코드 작업**
 
@@ -643,6 +665,8 @@ copilot --agent doc_writer
 |--------|------|
 | `/diff` | 현재 디렉토리 변경사항 리뷰 |
 | `/review` | 코드 리뷰 에이전트 실행 |
+| `/security-review` | staged·unstaged 변경의 보안 취약점 분석 |
+| `/rubber-duck` | 현재 작업에 대한 독립적 비평 요청 |
 | `/pr` | 현재 브랜치의 PR 작업 |
 | `/research` | GitHub·웹 소스를 활용한 심층 리서치 |
 | `/ide` | IDE 워크스페이스 연결 |
@@ -669,9 +693,10 @@ copilot --agent doc_writer
 | `/compact` | 히스토리 요약으로 컨텍스트 절약 (95% 근접 시 자동) |
 | `/share` · `/copy` | 세션 공유(md·HTML·Gist) / 마지막 응답 복사 |
 | `/memory` | 세션 간 메모리 토글 |
-| `/rewind` · `/undo` | 마지막 턴 되돌리기 + 파일 변경 복원 |
+| `/rewind` | 마지막 턴 되돌리기 + 파일 변경 복원 |
 | `/remote` | GitHub 웹·모바일에서 원격 제어 토글 |
 | `/chronicle` · `/search` | 세션 히스토리 도구 / 타임라인 검색 |
+| `/limits` | 현재 대화의 AI Credit 제한 조회·설정 |
 
 **도움말·기타**
 
@@ -683,11 +708,15 @@ copilot --agent doc_writer
 | `/restart` · `/exit` | CLI 재시작(세션 유지) / 종료 |
 | `/instructions` | 인스트럭션 파일 확인·토글 |
 | `/voice` | 음성 입력(받아쓰기) 모드 |
-| `/theme` · `/statusline` · `/footer` · `/streamer-mode` | 색상·상태줄·스트리머 모드 |
+| `/theme` · `/statusline` · `/footer` | 색상·상태줄 설정 |
+| `/settings` | CLI 설정 UI 또는 개별 설정값 조회·변경 |
 | `/experimental` | 실험적 기능 관리 |
 | `/feedback` | 피드백 제출 |
 | `/login` · `/logout` · `/user` | 로그인·로그아웃·GitHub 사용자 목록 관리 |
 | `/ask` | 히스토리에 남기지 않는 빠른 곁가지 질문 |
+| `/refine` | 거친 프롬프트를 실행 전 명확한 요청으로 재작성 |
+| `/diagnose` | 현재 세션 로그 진단 |
+| `/app` | Copilot 데스크톱 앱 안내 |
 | `/keep-alive` | 시스템 절전 방지 토글 |
 
 ## 키보드 단축키
@@ -696,7 +725,7 @@ copilot --agent doc_writer
 
 | 단축키 | 기능 | 단축키 | 기능 |
 |--------|------|--------|------|
-| `Shift+Tab` | 모드 전환 | `Ctrl+T` | 추론 과정 표시 토글 |
+| `Shift+Tab` | Interactive → Plan → Autopilot 순환 | `Ctrl+T` | 추론 과정 표시 토글 |
 | `Ctrl+S` | 프롬프트 임시 저장/복원 | `Ctrl+Q` | 프롬프트 대기열에 추가 |
 | `Ctrl+R` | 히스토리 역방향 검색 | `Ctrl+O`/`Ctrl+E` | 타임라인 확장 |
 | `Ctrl+C` | 취소 (`×2` 종료) | `Esc` | 현재 작업 취소 |
@@ -722,7 +751,10 @@ copilot --agent orchestrator --autopilot --yolo
 |--------|------|
 | `--agent <name>` | 특정 에이전트로 시작 |
 | `-p, --prompt "..."` | 비대화형으로 프롬프트 전달(스크립트·CI) |
+| `--mode <interactive|plan|autopilot>` | 시작 모드를 명시 |
+| `--plan` | Plan 모드로 시작 |
 | `--autopilot` | Autopilot으로 시작 |
+| `--model <model>` | 시작 모델 선택 (`auto` 가능) |
 | `--yolo` / `--allow-all` | 자동 승인 — 모든 도구·경로·URL 허용 |
 | `--cloud` | 클라우드 샌드박스 세션으로 시작 (공개 미리보기, 조직 정책 필요) |
 | `--continue` | 가장 최근 로컬 세션 이어서 |
@@ -735,7 +767,7 @@ copilot --agent orchestrator --autopilot --yolo
 ```bash
 # 스크립트 (macOS/Linux): 루트 설치는 | sudo bash, 버전·경로는 VERSION/PREFIX
 curl -fsSL https://gh.io/copilot-install | bash
-brew install copilot-cli            # @prerelease 로 프리릴리즈
+brew install --cask copilot-cli     # Homebrew
 winget install GitHub.Copilot       # .Prerelease 로 프리릴리즈
 npm install -g @github/copilot       # @prerelease 로 프리릴리즈
 ```
@@ -745,7 +777,8 @@ npm install -g @github/copilot       # @prerelease 로 프리릴리즈
 | 위치 | 설명 |
 |------|------|
 | `~/.copilot/settings.json` | CLI 설정 (`copilot help config`) |
-| `~/.copilot/mcp-config.json` | 유저 레벨 MCP 서버 (리포는 `.copilot/mcp-config.json`) |
+| `~/.copilot/mcp-config.json` | 유저 레벨 MCP 서버 |
+| `.mcp.json` / `.github/mcp.json` | Workspace MCP 서버 |
 | `~/.copilot/lsp-config.json` | 유저 레벨 LSP (리포는 `.github/lsp.json`) |
 | `~/.copilot/agents/` | 유저 레벨 커스텀 에이전트 |
 | `.github/hooks/*.json` | 에이전트 수명주기 훅 (편집 후 포맷·도구 승인/차단·시크릿 스캔 등) |
@@ -753,9 +786,8 @@ npm install -g @github/copilot       # @prerelease 로 프리릴리즈
 | 환경변수 | 설명 |
 |----------|------|
 | `COPILOT_HOME` | 설정 디렉토리 경로 변경(기본 `~/.copilot`) |
-| `COPILOT_GITHUB_TOKEN` / `GH_TOKEN` / `GITHUB_TOKEN` | PAT 인증 (이 우선순위로 적용) |
+| `COPILOT_GITHUB_TOKEN` / `GH_TOKEN` / `GITHUB_TOKEN` | Fine-grained PAT 인증(이 우선순위, `Copilot Requests` 필요) |
 | `COPILOT_CUSTOM_INSTRUCTIONS_DIRS` | 추가 인스트럭션 디렉토리 |
-| `GITHUB_PERSONAL_ACCESS_TOKEN` | `.copilot/mcp-config.json`의 github 서버 토큰 |
 
 **인스트럭션 인식·우선순위** — Copilot은 아래 위치를 자동 인식합니다. 여러 파일이 있으면 **모두 동시
 적용**되며, 충돌 시 단일 우선순위로 단정할 수 없습니다(조합에 따라 비결정적). 현재 적용은
@@ -834,12 +866,13 @@ model: auto                                         # 선택
 |------|------|------|
 | `copilot: command not found` | 설치 경로가 PATH에 없음 | 재설치 후 새 터미널. `npm prefix -g`/`ls ~/.local/bin/copilot` 확인, 필요 시 `export PATH="$HOME/.local/bin:$PATH"` |
 | 로그인 안내만 반복 | 인증 미완료 | `/login` 후 브라우저 인증(자동으로 안 열리면 표시 URL 수동 열기), 또는 `export GH_TOKEN=...`. 조직 정책 비활성화 시 관리자 확인 |
-| `/mcp`에 서버 안 보임 | `.copilot/mcp-config.json` 미인식/JSON 오류 | 저장소 루트에서 실행, JSON 문법 확인 후 세션 재시작 |
-| github 서버 인증 오류 | `GITHUB_PERSONAL_ACCESS_TOKEN` 미설정 | PAT를 `export` 하거나 `github` 블록 제거(기본 내장 사용) |
+| `/mcp`에 Workspace 서버 안 보임 | `.mcp.json`/`.github/mcp.json` 위치 또는 JSON 오류 | 저장소 루트에서 `copilot mcp list` 실행, JSON 문법 확인 후 세션 재시작 |
+| Copilot PAT 인증 오류 | Classic PAT 또는 권한 부족 | `Copilot Requests` 권한이 있는 fine-grained PAT 사용, 또는 `/login` OAuth 사용 |
 | azure 서버 연결 실패 | `az login` 세션 없음/만료 | `az login` 재실행, `az account show` 확인 |
 | `--agent <name>` 안 됨 | 파일명/위치 불일치 | `ls .github/agents/*.agent.md` 확인, `/agent`로 목록 확인 |
 | 응답 품질 저하 / 컨텍스트 초과 | 대화가 너무 김 | `/compact`·`/context`·`/clear` (95% 근접 시 자동 압축) |
 | Node.js 버전 오류 | Node 22 미만 | `node -v` 확인 후 22+ 설치 (<https://nodejs.org>) |
+| `pip install` 의존성 해석 실패 | 개별 SDK를 임의 버전으로 섞음 | 새 가상환경에서 루트 `requirements.txt`의 고정 버전을 함께 설치 |
 
 ## 더 알아보기
 
@@ -855,19 +888,20 @@ model: auto                                         # 선택
 ```
 .
 ├── README.md                       # 이 가이드 (개념 + 실습 + 레퍼런스)
-├── AGENTS.md                       # 에이전트 공통 가드레일 (push 금지·영문 커밋·PR 규칙)
-├── .copilot/
-│   └── mcp-config.json             # MCP 서버 설정 (github · azure · microsoftLearn)
+├── AGENTS.md                       # 에이전트 공통 가드레일 (보호 브랜치·커밋·PR 규칙)
+├── requirements.txt                # 검증된 Python 의존성 고정 버전
 ├── .github/
 │   ├── copilot-instructions.md     # 프로젝트 전역 인스트럭션
+│   ├── mcp.json                     # Workspace MCP (Azure · Microsoft Learn)
 │   ├── instructions/               # python · azure · korean · git-commit 규칙
 │   ├── prompts/                    # add-agent · review-code (재사용 프롬프트)
 │   ├── agents/                     # orchestrator + 4 패턴 + reviewer · debugger (7개)
 │   ├── skills/
 │   │   └── agent-framework-codegen/SKILL.md   # MAF 코드 생성 패턴
 │   └── workflows/
-│       └── smoke.yml               # 예제 스크립트 바이트컴파일 스모크 CI
+│       └── smoke.yml               # 의존성·컴파일·오프라인 테스트 CI
 ├── docs/                           # GitHub 멀티 계정 설정 가이드
+├── tests/                          # 임포트·워크플로우 출력 회귀 테스트
 └── src/                            # 바이브 코딩 예시 도메인 (Microsoft Agent Framework 예제)
 ```
 
@@ -883,14 +917,15 @@ model: auto                                         # 선택
 지시하세요.)
 
 > 💡 아래 각 코드 블록은 **한 번에 입력하는 하나의 프롬프트**입니다(`>`는 프롬프트 시작 표시, `-`
-> 줄은 같은 프롬프트에 포함되는 요구사항). 스트리밍 헬퍼 `_streaming.py`(전 예제 공유)와 Foundry IQ
-> 헬퍼 `_rag_iq.py`(7번 전용)는 이를 처음 `import`하는 예제를 만들 때 함께 생성됩니다.
+> 줄은 같은 프롬프트에 포함되는 요구사항). 스트리밍 헬퍼 `_streaming.py`(전 예제 공유), 인덱싱 대기
+> 헬퍼 `_indexing.py`(RAG 예제 공유), Foundry IQ 헬퍼 `_rag_iq.py`(7번 전용)는 이를 처음 `import`하는
+> 예제를 만들 때 함께 생성됩니다.
 
 **1. 단일 에이전트** → `src/01_single_agent.py`
 
 ```text
 > src/01_single_agent.py를 만들어줘. 요구사항:
-- FoundryChatClient(project_endpoint, model=MODEL_DEPLOYMENT_NAME, credential=AzureCliCredential)로 Foundry에 연결
+- FoundryChatClient(project_endpoint=PROJECT_ENDPOINT, model=MODEL_DEPLOYMENT_NAME, credential=AzureCliCredential())로 Foundry에 연결
 - 에이전트 이름은 "기술_어시스턴트", 역할은 Microsoft 기술 전문 어시스턴트로서 기술 질문에 정확하고 이해하기 쉽게, 간결하지만 핵심을 담아 한국어로 답변
 - 질문 "Microsoft Agent Framework가 무엇인가요?"를 던지고, _streaming의 stream_agent로 응답을 토큰 단위로 스트리밍 출력
 - 클라이언트 초기화가 실패하면 az login 상태를 확인하라는 한국어 안내를 출력
@@ -903,7 +938,7 @@ model: auto                                         # 선택
 - 분석가: 주제의 핵심 논점 3가지를 간결히 정리
 - 작가: 앞 단계 분석을 바탕으로 400자 이내 글 초안 작성
 - 편집자: 초안의 논리 흐름·가독성을 다듬어 최종본 작성
-- 세 에이전트를 SequentialBuilder(participants=[분석가, 작가, 편집자])로 연결
+- 세 에이전트를 SequentialBuilder(participants=[분석가, 작가, 편집자], intermediate_output_from=[분석가, 작가])로 연결
 - 입력 주제는 "Kubernetes 클러스터 비용 최적화 전략", 결과는 stream_workflow로 출력
 ```
 
@@ -915,7 +950,7 @@ model: auto                                         # 선택
 - 개발자(시니어 풀스택): 기술적 실현 가능성·아키텍처와 Azure/AI 활용 방안 제시
 - 디자이너(시니어 UX/UI): 사용자 경험·인터페이스·접근성 관점 제시
 - 발화자 선택은 participants 삽입 순서 기준 라운드 로빈 selection_func(state.current_round 사용)
-- GroupChatBuilder(participants, selection_func, max_rounds=6)로 구성하고 stream_workflow로 출력
+- GroupChatBuilder(participants=participants, selection_func=selection_func, max_rounds=6, intermediate_output_from=participants)로 구성하고 stream_workflow로 출력
 - 주제는 "모바일 앱 신규 기능 기획: AI 기반 개인화 추천 시스템 도입"
 ```
 
@@ -926,7 +961,7 @@ model: auto                                         # 선택
 - 보안 리뷰어: 보안 위험과 완화 방안을 핵심만 평가
 - 성능 리뷰어: 성능 병목과 확장성 개선점을 핵심만 평가
 - UX 리뷰어: 사용성과 접근성 개선점을 핵심만 평가
-- 세 에이전트를 ConcurrentBuilder(participants=[...])로 병렬 실행하고 stream_workflow로 출력
+- 세 에이전트를 ConcurrentBuilder(participants=[...], intermediate_output_from=[...])로 병렬 실행하고 stream_workflow로 출력
 - 검토 대상 설계안은 "로그인 없이 게스트 결제를 허용하고 추천 데이터를 단말에 캐시하는 신규 모바일 앱"
 ```
 
@@ -948,6 +983,7 @@ model: auto                                         # 선택
 - 지식 베이스는 한국어 문서 4건(환불 정책, 구독 요금제, 기술 지원 SLA, 계정 보안)
 - 인덱스가 없으면 키리스로 생성: id/title/content + content_vector, title·content는 ko.microsoft 분석기, HNSW 코사인, 벡터 차원은 임베딩 모델 실제 출력으로 동적 결정
 - 문서를 Azure OpenAI 임베딩(키리스 AAD)으로 임베딩해 merge_or_upload로 멱등 시드하고, 인덱싱 반영을 문서 수로 폴링
+- 인덱싱 대기는 _indexing.py의 비동기 deadline 헬퍼로 분리하고 30초 안에 완료되지 않으면 TimeoutError
 - 질문 "Pro 요금제는 얼마이고 기술 지원은 얼마나 빨리 받을 수 있나요?"로 top_k=2 하이브리드 검색 → 컨텍스트 주입
 - 에이전트 "고객지원_RAG_어시스턴트": 제공된 참고 문서 안의 정보로만 한국어로 답변하고, 없으면 모른다고 답한 뒤 답변 끝에 [출처: 문서제목] 표기
 - 필요 env: PROJECT_ENDPOINT, SEARCH_SERVICE_ENDPOINT, AZURE_OPENAI_ENDPOINT, EMBEDDING_DEPLOYMENT_NAME. 최종 답변은 stream_agent로 출력
@@ -957,11 +993,12 @@ model: auto                                         # 선택
 
 ```text
 > src/06_rag_agent_foundry_iq.py를 만들어줘. 06번과 같은 지식 베이스를 Foundry IQ(지식 베이스 + agentic retrieval)에 위임하는 변형이야. 요구사항:
-- 검색·증강을 직접 코딩하지 말고 agent_framework.azure의 AzureAISearchContextProvider(agentic 모드)에 위임 — before_run 훅에서 멀티홉 검색 결과를 세션 컨텍스트에 자동 주입
+- 검색·증강을 직접 코딩하지 말고 agent_framework.azure의 AzureAISearchContextProvider(agentic 모드)에 위임 — 모델 호출 전에 멀티홉 검색 결과를 세션 컨텍스트에 자동 주입
 - 인덱스는 기본 semantic 구성과 함께 생성(agentic retrieval 필수 요건), 하이브리드 예제와 충돌하지 않게 별도 인덱스명(기본 maf-lab-knowledge-iq-v1) 사용
 - 지식 베이스 model에는 임베딩이 아니라 채팅 모델 배포명(gpt-5.x)을 전달하고, 문서 임베딩은 EMBEDDING_DEPLOYMENT_NAME으로 시드 단계에서 수행
 - 컨텍스트 프로바이더는 비동기 자격 증명, 시드·채팅 클라이언트는 동기 자격 증명을 사용
-- 시드·프로바이더 구성·env 해석 같은 공용 로직은 _rag_iq.py로 분리하고, 최종 답변은 stream_agent로 출력
+- 시드·프로바이더 구성·env 해석 같은 공용 로직은 _rag_iq.py로 분리하고, 인덱싱 대기는 _indexing.py의 동기 deadline 헬퍼를 재사용
+- 최종 답변은 stream_agent로 출력
 ```
 
 > 🔍 생성 후에는 `/diff`로 변경을 확인하고 `copilot --agent reviewer`로 규칙(import 경로 · async ·

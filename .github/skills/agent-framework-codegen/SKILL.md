@@ -5,216 +5,246 @@ description: "Microsoft Agent Framework SDK를 사용한 AI 에이전트·워크
 
 # Microsoft Agent Framework 코드 생성 스킬
 
-이 프로젝트에서 Microsoft Agent Framework SDK로 에이전트·워크플로우를 작성할 때 따라야 하는
-패턴과 레퍼런스입니다. 모든 예제는 `src/`의 콘솔 스크립트 형태입니다.
+이 프로젝트에서 Microsoft Agent Framework SDK로 에이전트·워크플로우를 작성할 때 따르는
+패턴과 레퍼런스입니다. 검증 기준은 `agent-framework==1.11.0`이며, 모든 예제는 `src/`의
+비동기 콘솔 스크립트 형태입니다.
 
 ---
 
-## 1. SDK Import 경로
+## 1. SDK 임포트 경로
 
 ```python
-from agent_framework import Agent, MCPStreamableHTTPTool   # MCP 도구 연동(8절)
-from agent_framework import WorkflowBuilder, Case, Default  # 조건부 라우팅 그래프(7절)
+from agent_framework import (
+    Agent,
+    AgentExecutorResponse,
+    Case,
+    Default,
+    MCPStreamableHTTPTool,
+    WorkflowBuilder,
+)
 from agent_framework.foundry import FoundryChatClient
 from agent_framework.orchestrations import (
-    SequentialBuilder,   # 순차(Sequential) 워크플로우
-    GroupChatBuilder,    # GroupChat 워크플로우
-    GroupChatState,      # GroupChat 발화자 선택 상태
-    ConcurrentBuilder,   # 동시(Concurrent) 워크플로우
-    HandoffBuilder,      # Handoff 워크플로우
+    ConcurrentBuilder,
+    GroupChatBuilder,
+    GroupChatState,
+    HandoffBuilder,
+    SequentialBuilder,
 )
 from azure.identity import AzureCliCredential
 ```
 
-> **주의**: 핵심 클래스(`Agent`), Foundry 연동(`agent_framework.foundry`), 오케스트레이션
-> (`agent_framework.orchestrations`)은 서로 다른 서브모듈이다. 경로를 혼동하지 않는다.
-> `WorkflowBuilder`·`Case`·`Default`는 `agent_framework` 최상위에서 임포트한다.
+- 핵심 클래스와 그래프 빌더는 `agent_framework` 최상위에서 임포트한다.
+- Foundry 클라이언트는 `agent_framework.foundry`에서 임포트한다.
+- 미리 정의된 오케스트레이션 빌더는 `agent_framework.orchestrations`에서 임포트한다.
+- Foundry IQ 컨텍스트 프로바이더는 별도 패키지를 설치한 뒤
+  `from agent_framework.azure import AzureAISearchContextProvider`로 임포트한다.
 
 ---
 
 ## 2. 공통 골격
 
-모든 예제는 다음 골격을 따른다:
-
 ```python
 import asyncio
 import os
 import sys
-from dotenv import load_dotenv
-
-load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), "..", ".env"))
 
 from agent_framework import Agent
 from agent_framework.foundry import FoundryChatClient
 from azure.identity import AzureCliCredential
+from dotenv import load_dotenv
+
+load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), "..", ".env"))
 
 
 async def main():
     project_endpoint = os.getenv("PROJECT_ENDPOINT")
-    model = os.getenv("MODEL_DEPLOYMENT_NAME", "gpt-5.4")
+    model = os.getenv("MODEL_DEPLOYMENT_NAME") or "gpt-5.4"
     if not project_endpoint:
         print("오류: PROJECT_ENDPOINT 환경 변수를 설정해주세요.")
         sys.exit(1)
 
+    credential = AzureCliCredential()
     client = FoundryChatClient(
         project_endpoint=project_endpoint,
         model=model,
-        credential=AzureCliCredential(),
+        credential=credential,
     )
-    # ... 에이전트/워크플로우 구성 ...
+    # 에이전트 또는 워크플로우 구성
 
 
 if __name__ == "__main__":
     asyncio.run(main())
 ```
 
-- 클라이언트는 한 번만 생성하여 모든 에이전트에 공유한다.
-- 모든 에이전트 호출은 `await`로 한다.
+- 클라이언트와 자격 증명은 한 번 생성해 참여 에이전트가 공유한다.
+- 모든 에이전트 호출은 `await` 또는 `async for`를 사용한다.
+- 단일 에이전트는 `_streaming.stream_agent()`, 워크플로우는
+  `_streaming.stream_workflow()`로 출력한다.
 
 ---
 
-## 3. 에이전트 생성 (Single Agent)
+## 3. 단일 에이전트
 
 ```python
+from _streaming import stream_agent
+
 agent = Agent(
     client=client,
     name="기술_어시스턴트",
-    instructions="당신은 ... 한국어로 답변합니다.",   # 역할 지시문 (한국어)
+    instructions="당신은 Microsoft 기술 전문가입니다. 한국어로 간결하게 답변합니다.",
 )
 
-# 방법 A: 이 repo의 표준 패턴 — 스트리밍 헬퍼 사용 (응답이 토큰 단위로 실시간 출력)
-from _streaming import stream_agent
-await stream_agent(agent, "질문 내용", label="에이전트 응답")
-
-# 방법 B: 단순 API 예시 — 완성된 응답을 한 번에 받음
-result = await agent.run("질문 내용")
-print(result)
+await stream_agent(agent, "Microsoft Agent Framework가 무엇인가요?")
 ```
 
 - 역할·도메인·말투는 `instructions`로 부여한다.
-- **이 프로젝트 표준**: `src/_streaming.py`의 `stream_agent()` 헬퍼를 사용한다
-  (비스트리밍 `print(result)` 직접 출력은 교육 예시용으로만 허용).
-- 단일 에이전트의 `name`은 한국어도 가능하다. **단, Handoff에서는 `name`이 `handoff_to_<name>`
-  도구명이 되므로 ASCII(영문/숫자/`_`)만 사용**한다 (Foundry/OpenAI 도구명 규칙 `^[a-zA-Z0-9_.-]+$`).
+- Handoff 이외의 단일 에이전트 이름은 한국어도 가능하다.
+- 비스트리밍이 필요한 경우에만 `result = await agent.run(...)`을 사용한다.
 
 ---
 
 ## 4. Handoff 워크플로우
 
-접수(Coordinator) 에이전트가 요청을 분석해 전문가 에이전트에게 위임한다.
+Handoff에서는 에이전트 이름이 `handoff_to_<name>` 도구명에 포함되므로
+ASCII 영문·숫자·`_`·`.`·`-`만 사용한다.
 
 ```python
-from agent_framework.orchestrations import HandoffBuilder
-
-# 전문가 + 접수 에이전트 생성 (Handoff는 모든 참여 Agent에 이 플래그가 필수)
-# 주의: name은 handoff_to_<name> 도구명이 되므로 ASCII만 사용(페르소나는 instructions로 한국어 부여)
-tech_agent = Agent(client=client, name="tech_support", instructions="당신은 기술 지원 전문가입니다. ...",
-                   require_per_service_call_history_persistence=True)
-billing_agent = Agent(client=client, name="billing", instructions="당신은 결제 지원 전문가입니다. ...",
-                      require_per_service_call_history_persistence=True)
-triage_agent = Agent(client=client, name="triage", instructions=(
-    "당신은 접수 담당자입니다. 요청을 분석하여 적절한 전문가에게 연결합니다.\n"
-    "- 기술 문제 → handoff_to_tech_support 도구 호출\n"
-    "- 결제 문제 → handoff_to_billing 도구 호출"
-), require_per_service_call_history_persistence=True)
+tech_agent = Agent(
+    client=client,
+    name="tech_support",
+    instructions="당신은 기술 지원 전문가입니다. 한국어로 답변합니다.",
+    require_per_service_call_history_persistence=True,
+)
+billing_agent = Agent(
+    client=client,
+    name="billing",
+    instructions="당신은 결제 지원 전문가입니다. 한국어로 답변합니다.",
+    require_per_service_call_history_persistence=True,
+)
+triage_agent = Agent(
+    client=client,
+    name="triage",
+    instructions=(
+        "당신은 접수 담당자입니다. "
+        "기술 문제는 handoff_to_tech_support, 결제 문제는 handoff_to_billing 도구로 위임합니다."
+    ),
+    require_per_service_call_history_persistence=True,
+)
 
 workflow = (
-    HandoffBuilder(name="고객_지원",
-                   participants=[triage_agent, tech_agent, billing_agent])
-    .with_start_agent(triage_agent)                       # 시작 에이전트
-    .add_handoff(triage_agent, [tech_agent, billing_agent])  # 위임 대상 명시
-    .with_autonomous_mode()                               # 사용자 개입 없이 자동 진행
+    HandoffBuilder(
+        name="고객_지원",
+        participants=[triage_agent, tech_agent, billing_agent],
+    )
+    .with_start_agent(triage_agent)
+    .add_handoff(triage_agent, [tech_agent, billing_agent])
+    .with_autonomous_mode()
     .build()
 )
-result = await workflow.run("결제 오류가 발생했어요.")
-for output in result.get_outputs():   # 최종 응답만 추출
-    print(output)
+
+await stream_workflow(workflow, "결제 오류가 발생했어요.")
 ```
 
-| 메서드 | 용도 |
-|--------|------|
-| `HandoffBuilder(name=..., participants=...)` | 워크플로우 빌더 생성 (키워드 인자) |
-| `.with_start_agent(agent)` | 시작(접수) 에이전트 지정 |
-| `.add_handoff(from, [to...])` | 세부 라우팅 제어가 필요할 때 특정 위임 경로를 제한 |
-| `.with_autonomous_mode()` | 사용자 입력 없이 자동 진행 |
-| `.build()` | 워크플로우 객체 생성 |
-
-> **핵심**: 세부 라우팅 제어가 필요할 때 `add_handoff`를 사용한다.
-> 생략 시 기본 mesh topology가 적용되어 모든 에이전트 간 handoff가 허용된다.
-> 또한 **모든 참여 Agent**에 `require_per_service_call_history_persistence=True`를 지정해야 한다
-> (누락 시 `build()`가 `ValueError`를 발생시킨다).
+- 모든 참여 `Agent`에 `require_per_service_call_history_persistence=True`가 필요하다.
+- `add_handoff()`를 생략하면 기본 mesh topology가 적용된다. 특정 경로만 허용할 때 명시한다.
+- 자동 진행이 필요하면 `with_autonomous_mode()`를 사용하고 필요 시 agent별 turn limit을 둔다.
 
 ---
 
 ## 5. GroupChat 워크플로우
 
-여러 에이전트가 한 대화에 참여해 협업한다. 발화자는 `selection_func`으로 결정한다.
-
 ```python
-from agent_framework.orchestrations import GroupChatBuilder, GroupChatState
+participants = [planner_agent, developer_agent, designer_agent]
+speaker_names = [participant.name for participant in participants]
+
 
 def select_next_speaker(state: GroupChatState) -> str:
-    """라운드 로빈으로 다음 발화자 선택."""
-    speakers = ["기획자", "개발자", "디자이너"]
-    return speakers[state.current_round % len(speakers)]
+    """라운드 로빈으로 다음 발화자를 선택합니다."""
+    return speaker_names[state.current_round % len(speaker_names)]
+
 
 workflow = GroupChatBuilder(
-    participants=[planner_agent, developer_agent, designer_agent],
+    participants=participants,
     selection_func=select_next_speaker,
-    max_rounds=6,          # 무한 토론 방지 (권장)
+    max_rounds=6,
+    intermediate_output_from=participants,
 ).build()
-result = await workflow.run("토론 주제")
+
+await stream_workflow(workflow, "토론 주제")
 ```
 
-- `GroupChatState`: `current_round`, `participants`, `conversation` 제공.
-- `max_rounds` 사용을 권장한다(미설정 시 `termination_condition`으로 종료 제어 가능).
-- 참여자 `name`은 도구명이 아니므로 한국어도 가능하다(Handoff와 다른 점).
-- 최종 토론 내용은 `result.get_outputs()`(종료 메시지)가 아니라 이벤트의 `AgentExecutorResponse`에서
-  추출한다. `from agent_framework import AgentExecutorResponse` 후 `isinstance` 필터로 발언을 모은다.
+- `GroupChatState`는 `current_round`, `participants`, `conversation`을 제공한다.
+- 무한 토론을 막기 위해 `max_rounds` 또는 `termination_condition`을 둔다.
+- 기본 설정에서는 오케스트레이터 종료 메시지만 최종 출력으로 노출된다.
+- 참여자 발언을 표시하려면 `intermediate_output_from=participants`를 지정한다.
+- 현재 SDK의 참여자 스트림은 `AgentResponseUpdate.author_name`과 `text`로 식별한다.
 
 ---
 
-## 6. Custom 순차 워크플로우 (조건부 라우팅)
+## 6. Sequential·Concurrent 출력 설정
 
-SDK 빌더 없이 **일반 Python 제어 흐름**으로 에이전트를 순차 연결한다.
+기본 빌더는 최종 단계 또는 집계기만 `output` 이벤트로 노출한다. 교육용 예제에서 각 참여자의
+결과를 보이려면 중간 출력 소스를 명시한다.
 
 ```python
-analysis = await agents["topic_analyzer"].run(input_topic)   # 1) 분석
-route = "tech_writer" if "기술" in str(analysis).split("\n")[0] else "general_writer"  # 2) 라우팅
-draft = await agents[route].run(f"...{analysis}...")          # 3) 초안
-final = await agents["editor"].run(f"...{draft}...")          # 4) 편집
+sequential = SequentialBuilder(
+    participants=[analyzer, writer, editor],
+    intermediate_output_from=[analyzer, writer],
+).build()
+
+concurrent = ConcurrentBuilder(
+    participants=[security, performance, ux],
+    intermediate_output_from=[security, performance, ux],
+).build()
+```
+
+- Sequential은 마지막 참여자가 최종 `output`이므로 앞 단계만 중간 출력으로 지정한다.
+- Concurrent의 기본 집계기는 모든 응답을 하나의 `AgentResponse`로 모은다.
+  참여자 스트림을 함께 노출하면 출력 헬퍼에서 집계 중복을 제거해야 한다.
+
+---
+
+## 7. Python 제어 흐름 기반 순차 처리
+
+간단한 조건 분기는 일반 Python 흐름으로 연결해도 된다.
+
+```python
+analysis = await agents["topic_analyzer"].run(input_topic)
+route = "tech_writer" if "기술" in str(analysis).split("\n")[0] else "general_writer"
+draft = await agents[route].run(f"다음 분석을 바탕으로 초안을 작성하세요.\n{analysis}")
+final = await agents["editor"].run(f"다음 초안을 다듬으세요.\n{draft}")
 print(final)
 ```
 
-- 라우팅 함수는 이전 에이전트의 출력 텍스트를 파싱해 다음 경로를 결정한다.
-- 더 복잡한 조건 분기가 필요하면 아래 7절의 `WorkflowBuilder`로 전환한다.
+복잡한 조건 분기·팬아웃·팬인은 `WorkflowBuilder`를 사용한다.
 
 ---
 
-## 7. WorkflowBuilder — 조건부 라우팅 그래프
-
-`SequentialBuilder`·`ConcurrentBuilder`처럼 선언적이지만, **조건부 분기(switch-case)** 와
-**팬아웃/팬인**이 필요한 복잡한 흐름에 사용한다. `Agent`를 직접 노드로 쓸 수 있다.
+## 8. WorkflowBuilder 조건부 그래프
 
 ```python
-from agent_framework import WorkflowBuilder, Case, Default
+def is_technical_topic(message: AgentExecutorResponse) -> bool:
+    """분석 에이전트의 응답 본문에서 기술 주제 여부를 판별합니다."""
+    return "기술" in (message.agent_response.text or "")
 
-# 에이전트를 노드로 직접 전달 (자동 래핑)
+
 workflow = (
-    WorkflowBuilder(start_executor=analyzer_agent)    # 시작 노드
+    WorkflowBuilder(
+        start_executor=analyzer_agent,
+        output_from=[editor_agent],
+    )
     .add_switch_case_edge_group(
         analyzer_agent,
         [
-            # 분석 결과에 "기술" 포함 → 기술 작가로 라우팅
-            Case(condition=lambda msg: "기술" in str(msg), target=tech_writer_agent),
-            # 그 외 → 일반 작가 (Default는 조건 없이 나머지 처리)
+            Case(condition=is_technical_topic, target=tech_writer_agent),
             Default(target=general_writer_agent),
         ],
     )
-    .add_edge(tech_writer_agent, editor_agent)       # 기술 작가 → 편집자
-    .add_edge(general_writer_agent, editor_agent)    # 일반 작가 → 편집자
+    .add_edge(tech_writer_agent, editor_agent)
+    .add_edge(general_writer_agent, editor_agent)
     .build()
 )
+
 result = await workflow.run("Kubernetes 비용 최적화 전략")
 for output in result.get_outputs():
     print(output)
@@ -222,91 +252,102 @@ for output in result.get_outputs():
 
 | 메서드 | 용도 |
 |--------|------|
-| `WorkflowBuilder(start_executor=...)` | 빌더 생성 (시작 노드 지정, 키워드 인자) |
-| `.add_edge(source, target)` | 단순 순차 엣지 (조건 없이 항상 통과) |
-| `.add_switch_case_edge_group(source, [Case..., Default])` | 조건부 분기 — 조건 순서대로 평가, 첫 일치 노드로 전달 |
-| `.add_fan_out_edges(source, [target1, target2])` | 팬아웃 — 같은 메시지를 여러 노드에 병렬 전송 |
-| `Case(condition=lambda msg: ..., target=agent)` | 조건 분기 케이스. `condition`은 `(msg) -> bool` |
-| `Default(target=agent)` | 모든 `Case` 불일치 시 수신하는 기본 케이스 |
-| `.build()` | `Workflow` 객체 생성 |
-
-> **선택 기준**:
-> - **단순 순차(A→B→C)**: `SequentialBuilder` 사용 (더 간결)
-> - **조건부 분기 / 팬아웃 / 복잡한 그래프**: `WorkflowBuilder` 사용
-> - **Python 제어 흐름으로 충분한 경우**: 6절의 `if/else` 패턴 사용
+| `WorkflowBuilder(start_executor=...)` | 시작 노드 지정 |
+| `.add_edge(source, target)` | 단순 순차 엣지 |
+| `.add_switch_case_edge_group(source, cases)` | 순서대로 평가하는 조건 분기 |
+| `.add_fan_out_edges(source, targets)` | 같은 메시지를 여러 노드에 전송 |
+| `.add_fan_in_edges(sources, target)` | 여러 결과를 한 노드로 수집 |
+| `Case(condition=..., target=...)` | 조건이 참일 때의 대상. Agent 소스에서는 `AgentExecutorResponse`를 받음 |
+| `Default(target=...)` | 모든 Case가 거짓일 때의 대상 |
 
 ---
 
-## 8. MCP 도구 연동 (외부 시스템 호출)
-
-에이전트가 외부 MCP 서버의 도구를 런타임에 호출하게 한다. `tools=` 인자로 전달한다.
+## 9. MCP 도구 연동
 
 ```python
-from agent_framework import Agent, MCPStreamableHTTPTool
-
-# HTTP(SSE) 원격 MCP 서버. 인증 필요 시 header_provider 또는 커스텀 http_client 사용
 learn_mcp = MCPStreamableHTTPTool(
     name="MicrosoftLearn",
     url="https://learn.microsoft.com/api/mcp",
     description="Microsoft/Azure 공식 문서 검색",
-    header_provider=lambda: {"Authorization": f"Bearer {token}"},
 )
 
-# async with 안에서만 세션 활성화 (진입=connect, 종료=close)
 async with learn_mcp:
     agent = Agent(
         client=client,
         name="문서_리서치_어시스턴트",
-        instructions="답변 전 도구로 검색해 출처와 함께 답한다.",
+        instructions="답변 전에 공식 문서를 검색하고 출처와 함께 한국어로 답변합니다.",
         tools=learn_mcp,
     )
-    result = await agent.run("질문")
+    await stream_agent(agent, "질문")
 ```
 
-| 클래스 | 연결 방식 |
-|--------|-----------|
-| `MCPStreamableHTTPTool` | HTTP/SSE 원격 서버 |
-| `MCPStdioTool` | 로컬 프로세스(stdio) 서버 |
-| `MCPWebsocketTool` | WebSocket 서버 |
-
-- 반드시 `async with mcp_tool:` 컨텍스트 안에서 에이전트를 생성·실행한다.
-- 여러 도구는 `tools=[tool_a, tool_b]` 리스트로 전달한다.
-- **Copilot CLI의 `.copilot/mcp-config.json`(개발자용)과 혼동하지 않는다.** 이 절은 *생성된
-  MAF 에이전트가 런타임에 쓰는 도구*다.
-
----
-
-## 9. RAG (검색 증강 생성)
-
-질문 관련 문서를 먼저 검색해 컨텍스트로 주입한 뒤 답하게 한다: 검색 → 증강 → 생성.
+- MCP 세션은 반드시 `async with` 안에서 연결하고 종료한다.
+- 여러 MCP 도구는 `tools=[tool_a, tool_b]`로 전달한다.
+- 인증 서버의 `header_provider`는 호출 컨텍스트 인자 하나를 받는다.
 
 ```python
-docs = retrieve(question, top_k=2)          # 1) 검색 (지식 베이스에서 추출)
-context = build_context(docs)               # 검색 결과를 문자열로
-augmented = (                               # 2) 증강 (프롬프트에 주입)
-    f"다음 참고 문서를 바탕으로 답하세요.\n\n--- 참고 문서 ---\n{context}\n\n"
-    f"--- 질문 ---\n{question}"
+import os
+
+
+def build_headers(_: dict[str, object]) -> dict[str, str]:
+    token = os.environ["MCP_ACCESS_TOKEN"]
+    return {"Authorization": f"Bearer {token}"}
+
+
+secured_mcp = MCPStreamableHTTPTool(
+    name="SecuredMCP",
+    url="https://example.com/mcp",
+    header_provider=build_headers,
 )
-agent = Agent(client=client, name="RAG_어시스턴트",
-              instructions="제공된 문서 안의 정보만 근거로 답하고, 없으면 모른다고 한다.")
-result = await agent.run(augmented)          # 3) 생성
 ```
 
-- 정확도를 좌우하는 두 축: **(1) 검색 품질**, **(2) "문서 밖은 추측 금지" 지시문**.
-- 실습(`src/06_rag_agent.py`)은 **Azure AI Search 하이브리드(BM25 + 벡터) 검색**을 사용한다.
-  환경변수 `SEARCH_SERVICE_ENDPOINT`, `SEARCH_INDEX_NAME`(인덱스 없으면 자동 생성)가 필요하다.
+- Copilot CLI 개발자용 MCP 설정은 `.mcp.json` 또는 `.github/mcp.json`이다.
+  이 절의 MCP 도구는 생성된 Agent Framework 애플리케이션이 런타임에 사용하는 별도 연결이다.
 
 ---
 
-## 10. 트러블슈팅
+## 10. RAG
+
+질문 관련 문서를 검색하고 컨텍스트로 주입한 뒤 답변을 생성한다.
+
+```python
+docs = retrieve(question, top_k=2)
+context = build_context(docs)
+augmented_prompt = (
+    f"다음 참고 문서 안의 정보만 사용하세요.\n\n"
+    f"--- 참고 문서 ---\n{context}\n\n"
+    f"--- 질문 ---\n{question}"
+)
+
+agent = Agent(
+    client=client,
+    name="RAG_어시스턴트",
+    instructions=(
+        "제공된 문서 안의 정보만 근거로 한국어로 답변하고, "
+        "정보가 없으면 모른다고 답합니다."
+    ),
+)
+await stream_agent(agent, augmented_prompt)
+```
+
+- 기본 예제 `06_rag_agent.py`는 Azure AI Search 하이브리드 검색을 직접 구현한다.
+- Foundry IQ 변형은 `AzureAISearchContextProvider(mode="agentic")`가 모델 호출 전에
+  멀티홉 검색 결과를 컨텍스트에 주입한다.
+- 검색 품질과 "문서 밖 추측 금지" 지시문을 함께 검증한다.
+
+---
+
+## 11. 트러블슈팅
 
 | 증상 | 원인 / 해결 |
 |------|-------------|
-| `PROJECT_ENDPOINT 환경 변수를 설정해주세요` | 루트 `.env` 작성 + `load_dotenv` 경로 확인 |
+| `PROJECT_ENDPOINT 환경 변수를 설정해주세요` | 루트 `.env` 작성과 `load_dotenv` 경로 확인 |
 | 인증 실패 | `az login` 재실행, `az account set`으로 구독 선택 |
-| `400 Invalid 'tools[0].name'` (handoff) | Agent `name`에 한글/공백 사용 — handoff 도구명은 ASCII(`^[a-zA-Z0-9_.-]+$`)만 허용. name을 영문으로 변경 |
-| Handoff `build()`가 `ValueError`(persistence) | 일부 Agent에 `require_per_service_call_history_persistence=True` 누락 — 모든 참여 Agent에 지정 |
-| GroupChat이 끝나지 않음 | `max_rounds` 또는 `termination_condition` 미설정 |
-| GroupChat 결과가 종료 메시지만 나옴 | `get_outputs()`는 종료 메시지만 반환 — 토론 내용은 이벤트의 `AgentExecutorResponse`에서 추출 |
-| `WorkflowBuilder` `Case` 조건이 항상 첫 케이스로만 분기됨 | 조건은 **순서대로 평가**되며 첫 번째 `True`에서 멈춤 — 조건 순서를 좁은 것부터 배치할 것 |
-| `ImportError: agent_framework...` | `pip install -U agent-framework`, 가상환경 활성화 확인 |
+| Handoff 도구명 400 오류 | Handoff 참여자 `name`을 ASCII 규칙에 맞게 변경 |
+| Handoff `build()` persistence 오류 | 모든 참여 Agent에 `require_per_service_call_history_persistence=True` 지정 |
+| GroupChat이 끝나지 않음 | `max_rounds` 또는 `termination_condition` 설정 |
+| GroupChat이 종료 메시지만 표시 | 참여자를 `intermediate_output_from`에 지정 |
+| Concurrent 결과가 비어 있음 | `AgentResponse` 집계 이벤트를 처리하거나 참여자 중간 출력을 지정 |
+| 조건 분기가 항상 첫 Case로 감 | Case는 순서대로 평가되므로 좁은 조건부터 배치 |
+| pip 의존성 해석 실패 | `requirements.txt`의 검증된 정확 버전을 함께 설치 |
+| `ImportError: agent_framework...` | 가상환경 활성화 후 `pip install -r requirements.txt` 재실행 |

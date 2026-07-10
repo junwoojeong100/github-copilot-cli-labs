@@ -8,8 +8,8 @@ retrieval)에 검색을 위임하는 변형 예제들이 공유하는 헬퍼를 
   - 인덱스를 **기본 semantic 구성**과 함께 생성합니다(agentic retrieval 필수 요건).
   - 검색 단계는 ``agent_framework.azure.AzureAISearchContextProvider``(agentic 모드)가
     담당합니다. 이 프로바이더는 인덱스로부터 지식 소스(``<index>-source``)와 지식
-    베이스(``<index>-kb``)를 자동 생성하고, 멀티홉 검색 결과를 에이전트 세션
-    컨텍스트에 주입(``before_run`` 훅)합니다.
+    베이스(``<index>-kb``)를 자동 생성하고, 모델 호출 전에 멀티홉 검색 결과를
+    에이전트 세션 컨텍스트에 주입합니다.
 
 지식 베이스(Foundry IQ)·인덱스는 기존 하이브리드 예제와 충돌하지 않도록 **별도
 인덱스 이름**(기본 ``maf-lab-knowledge-iq-v1``)을 사용합니다.
@@ -22,8 +22,6 @@ retrieval)에 검색을 위임하는 변형 예제들이 공유하는 헬퍼를 
 """
 
 import os
-import time
-
 from azure.core.credentials import TokenCredential
 from azure.identity import get_bearer_token_provider
 from azure.search.documents import SearchClient
@@ -45,6 +43,8 @@ from azure.search.documents.indexes.models import (
     VectorSearchProfile,
 )
 from openai import AzureOpenAI
+
+from _indexing import wait_for_document_count
 
 # agentic retrieval에 필요한 기본 semantic 구성 이름
 SEMANTIC_CONFIG_NAME = "maf-lab-semantic"
@@ -213,10 +213,7 @@ def seed_documents(search_client: SearchClient, embed) -> None:
 
     # 인덱싱 반영 대기 (최대 30초)
     target = len(KNOWLEDGE_BASE)
-    for _ in range(30):
-        if search_client.get_document_count() >= target:
-            break
-        time.sleep(1)
+    wait_for_document_count(search_client, target)
     print(f"  → 문서 {target}건 임베딩·업로드 완료")
 
 

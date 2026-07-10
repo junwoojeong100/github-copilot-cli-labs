@@ -43,6 +43,8 @@ from azure.search.documents.indexes.models import (
     VectorSearchProfile,
 )
 from azure.search.documents.models import VectorizedQuery
+
+from _indexing import wait_for_document_count_async
 from openai import AzureOpenAI
 
 from _streaming import stream_agent
@@ -191,13 +193,8 @@ async def seed_documents(search_client: SearchClient, embed) -> None:
         raise RuntimeError(f"문서 업로드 실패: {[r.key for r in failed]}")
 
     # 인덱싱 반영 대기 (최대 30초).
-    # embed/merge_or_upload/get_document_count는 동기 Azure SDK 호출이며,
-    # sleep만 비동기화하여 이벤트 루프 블로킹을 최소화합니다.
     target = len(KNOWLEDGE_BASE)
-    for _ in range(30):
-        if search_client.get_document_count() >= target:
-            break
-        await asyncio.sleep(1)
+    await wait_for_document_count_async(search_client, target)
     print(f"  → 문서 {target}건 임베딩·업로드 완료")
 
 
@@ -216,7 +213,7 @@ def retrieve(search_client: SearchClient, embed, query: str, top_k: int = 2) -> 
     query_vector = embed([query])[0]
     vector_query = VectorizedQuery(
         vector=query_vector,
-        k=max(5, top_k),  # 하이브리드 융합용 후보 풀은 넉넉히
+        k_nearest_neighbors=max(5, top_k),  # 하이브리드 융합용 후보 풀은 넉넉히
         fields="content_vector",
     )
 
@@ -300,7 +297,9 @@ async def main():
         docs = retrieve(search_client, embed, question, top_k=2)
         print("  → 검색된 문서:")
         for doc in docs:
-            print(f"     - {doc['title']} ({doc['id']}, score={doc['score']:.3f})")
+            score = doc["score"]
+            score_text = f"{score:.3f}" if isinstance(score, (int, float)) else "n/a"
+            print(f"     - {doc['title']} ({doc['id']}, score={score_text})")
         context = build_context(docs)
 
         # ── 6단계: 증강(Augmentation) — 검색 결과를 프롬프트에 주입 ──
