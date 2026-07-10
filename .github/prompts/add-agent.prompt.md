@@ -17,9 +17,9 @@ mode: "agent"
 ## 현재 시나리오 구조 (`src/`)
 
 1. **단일 에이전트** (`01_single_agent.py`) — `Agent(client=client, name=..., instructions=...)` + `stream_agent(agent, prompt)`
-2. **순차(Sequential)** (`02_sequential_workflow.py`) — `SequentialBuilder(participants=[...])` + `stream_workflow(workflow, topic)`
-3. **GroupChat** (`03_group_chat.py`) — `GroupChatBuilder(participants=..., selection_func=..., max_rounds=...)` + `stream_workflow(workflow, topic)`
-4. **동시(Concurrent)** (`04_concurrent_workflow.py`) — `ConcurrentBuilder(participants=[...])` + `stream_workflow(workflow, design)`
+2. **순차(Sequential)** (`02_sequential_workflow.py`) — `SequentialBuilder(..., intermediate_output_from=[중간 참여자...])` + `stream_workflow(workflow, topic)`
+3. **GroupChat** (`03_group_chat.py`) — `GroupChatBuilder(..., max_rounds=..., intermediate_output_from=participants)` + `stream_workflow(workflow, topic)`
+4. **동시(Concurrent)** (`04_concurrent_workflow.py`) — `ConcurrentBuilder(..., intermediate_output_from=participants)` + `stream_workflow(workflow, design)`
 5. **MCP 도구 연동** (`05_mcp_agent.py`) — `MCPStreamableHTTPTool(url=...)` + `Agent(tools=mcp_tool)` + `stream_agent(agent, prompt)`
 6. **RAG** (`06_rag_agent.py`) — 검색(Search) → 증강(Augment) → 단일 에이전트 실행 + `stream_agent(agent, augmented_prompt)`
 7. **RAG (Foundry IQ)** (`06_rag_agent_foundry_iq.py`) — Foundry IQ 검색 결과를 바탕으로 단일 에이전트를 실행 + `stream_agent(agent, question)`
@@ -31,4 +31,5 @@ mode: "agent"
 - **스트리밍 출력**: 단일 에이전트는 `from _streaming import stream_agent`, 워크플로우는
   `from _streaming import stream_workflow` (`agent.run()` 직접 print 금지)
 - `instructions`와 콘솔 출력은 한국어로 작성
-- 무한 루프 방지를 위해 워크플로우에는 `max_rounds`/수렴 조건을 둔다
+- 반복형 워크플로우(GroupChat·Handoff)는 `max_rounds`·종료 조건·turn limit 중 적절한 제한을 둔다
+- 실습에서 참여자별 결과를 보여줘야 하면 빌더의 `intermediate_output_from`을 명시한다

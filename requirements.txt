@@ -7,14 +7,14 @@ openai==2.38.0
 # MCP (Model Context Protocol)
 mcp[cli]==1.27.2
 
-# Azure AI Search (Foundry IQ 지식 베이스 연동용)
-azure-search-documents==11.7.0b2
+# Azure AI Search (Foundry IQ agentic retrieval의 확장 추론 지원)
+azure-search-documents==12.1.0b1
 
 # Microsoft Agent Framework
-agent-framework==1.8.0
+agent-framework==1.11.0
 
 # Foundry IQ agentic 검색 컨텍스트 프로바이더 (예제 06 변형)
-agent-framework-azure-ai-search>=1.0.0b260521
+agent-framework-azure-ai-search==1.0.0b260709
 
 # 유틸리티
 python-dotenv==1.2.2

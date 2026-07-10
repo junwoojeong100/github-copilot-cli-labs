@@ -108,10 +108,11 @@ async def main():
             participants=participants,
             selection_func=select_next_speaker,
             max_rounds=6,  # 무한 토론 방지를 위한 최대 라운드
+            intermediate_output_from=participants,
         ).build()
 
         # ── 5단계: 토론 결과 스트리밍 출력 ──
-        # stream=True로 각 참여자의 발언을 발화 순서대로 토큰 단위 실시간 출력합니다.
+        # 각 참여자의 완성된 발언을 발화 순서대로 출력합니다.
         print("\n[GroupChat 토론 결과]")
         await stream_workflow(workflow, topic)
 

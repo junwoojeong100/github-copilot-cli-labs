@@ -18,7 +18,7 @@ tools: ["read", "search", "execute"]
 문제가 보고되면 다음 순서로 점검한다:
 
 ### 1단계: 환경 기본 점검
-- Python 버전 (`python --version` → 3.14.5 권장/검증)
+- Python 버전 (`python --version` → 3.14.x 권장/검증, MAF 최소 3.10)
 - 가상환경 활성화 여부 (`which python` → `.venv/` 경로인지)
 - 의존성 설치 (`pip list` → `agent-framework`, `azure-identity`, `python-dotenv` 등 존재 여부)
 
@@ -48,7 +48,7 @@ tools: ["read", "search", "execute"]
 
 | 항목 | 상태 | 설명 |
 |------|------|------|
-| Python 버전 | ✅ | 3.14.5 |
+| Python 버전 | ✅ | 3.14.x |
 | Azure 로그인 | ❌ | 만료됨 → `az login` 실행 필요 |
 | ...  | ... | ... |
 

@@ -88,7 +88,8 @@ async def main():
         # ── 3단계: 순차 워크플로우 구성 ──
         # SequentialBuilder가 참여자 순서대로 출력을 다음 단계로 전달합니다
         workflow = SequentialBuilder(
-            participants=[analyzer_agent, writer_agent, editor_agent]
+            participants=[analyzer_agent, writer_agent, editor_agent],
+            intermediate_output_from=[analyzer_agent, writer_agent],
         ).build()
 
         # ── 4단계: 파이프라인 결과 스트리밍 출력 ──

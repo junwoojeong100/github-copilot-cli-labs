@@ -30,6 +30,8 @@
 
 - 클라이언트·에이전트는 키워드 인자로 생성: `FoundryChatClient(project_endpoint=..., model=..., credential=...)`, `Agent(client=..., name=..., instructions=...)` (역할은 `instructions`로 부여)
 - 오케스트레이션: `SequentialBuilder(participants=[...])`, `GroupChatBuilder(participants=..., selection_func=..., max_rounds=...)`, `ConcurrentBuilder(participants=[...])` 뒤에 `.build()`
+- 참여자별 진행 결과를 콘솔에 표시하는 예제는 빌더의 `intermediate_output_from`을 명시하고
+  `stream_workflow()`로 `output`·`intermediate` 이벤트를 함께 출력
 - 진입점은 `if __name__ == "__main__": asyncio.run(main())`, 환경변수는 `load_dotenv`로 로드하고 `PROJECT_ENDPOINT` 누락 시 친절한 오류 후 종료
 - 새 예제는 `src/`에 `NN_<name>.py` 규칙으로 추가
 

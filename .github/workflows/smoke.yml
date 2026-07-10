@@ -1,7 +1,6 @@
 name: smoke
 
-# 예제 스크립트의 구문 오류를 빠르게 잡는 경량 스모크 테스트입니다.
-# Azure 자격증명이 없어도 동작하도록 실제 실행 대신 바이트컴파일만 수행합니다.
+# 의존성 해석, 모듈 임포트, 워크플로우 출력을 Azure 자격 증명 없이 검증합니다.
 on:
   push:
     branches: ["**"]
@@ -17,7 +16,15 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.14.5"
+          python-version: "3.14"
+          cache: pip
+          cache-dependency-path: requirements.txt
+
+      - name: Install dependencies
+        run: python -m pip install -r requirements.txt
 
       - name: Byte-compile all example scripts
         run: python -m compileall -q src
+
+      - name: Run offline smoke tests
+        run: python -m unittest discover -s tests -v
