@@ -5,7 +5,7 @@ azure-identity==1.25.3
 openai==2.38.0
 
 # MCP (Model Context Protocol)
-mcp[cli]==1.27.2
+mcp[cli]==1.28.1
 
 # Azure AI Search (Foundry IQ agentic retrieval의 확장 추론 지원)
 azure-search-documents==12.1.0b1
