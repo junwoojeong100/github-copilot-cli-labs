@@ -6,7 +6,7 @@ description: "Microsoft Agent Framework SDK를 사용한 AI 에이전트·워크
 # Microsoft Agent Framework 코드 생성 스킬
 
 이 프로젝트에서 Microsoft Agent Framework SDK로 에이전트·워크플로우를 작성할 때 따르는
-패턴과 레퍼런스입니다. 검증 기준은 `agent-framework==1.11.0`이며, 모든 예제는 `src/`의
+패턴과 레퍼런스입니다. 검증 기준은 `agent-framework==1.14.0`이며, 모든 예제는 `src/`의
 비동기 콘솔 스크립트 형태입니다.
 
 ---
