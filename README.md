@@ -33,7 +33,8 @@
 
 > 💡 **선택 항목은 없어도 완주할 수 있습니다.** Azure·Python 없이도 인증이 필요 없는
 > Microsoft Learn MCP 서버와 `/diff`·`reviewer` 검토만으로 모든 실습을 따라갈 수 있습니다.
-> Copilot CLI 자체 인증은 브라우저 OAuth 로그인을 권장합니다.
+> Copilot CLI 자체 인증은 브라우저 OAuth 로그인을 권장합니다. `src/` 예제를 **실제로 실행**해
+> 보고 싶다면 [Azure 리소스 준비 가이드](docs/azure-setup.md)를 참고하세요.
 
 ## 목차
 
@@ -43,7 +44,7 @@
 - [2. VS Code Copilot과 무엇이 다른가](#2-vs-code-copilot과-무엇이-다른가)
 - [3. 주요 기능 한눈에](#3-주요-기능-한눈에)
 
-**② 실습편 — 따라하기** (약 90분, 준비물: Copilot 구독 · Node.js 22+)
+**② 실습편 — 따라하기** (약 95분, 준비물: Copilot 구독 · Node.js 22+)
 
 - [실습 0. 설치 · 인증 · 첫 실행](#실습-0-설치--인증--첫-실행)
 - [실습 1. 대화 · 파일 멘션 · 모드 전환](#실습-1-대화--파일-멘션--모드-전환)
@@ -186,7 +187,7 @@ copilot --version   # 1.0.x 출력
 
 ```bash
 # 이 저장소에서 실행해야 .github/ 설정을 함께 읽습니다
-cd copilot-cli-labs
+cd github-copilot-cli-labs
 copilot
 ```
 
@@ -246,10 +247,14 @@ Plan 모드에서는 코드를 바꾸기 전에 **구현 계획**을 먼저 제�
 ```
 
 > 💡 `@`는 파일, `#`는 이슈/PR, `!`는 로컬 셸 명령을 가리킵니다. `!`로 시작하면 모델을 거치지 않고
-> 바로 실행되므로 `!git status` 같은 확인 작업이 빠릅니다.
+> 바로 실행되므로 `!git status` 같은 확인 작업이 빠릅니다. 이미지·PDF도 `@경로`, 드래그 앤 드롭,
+> 클립보드 붙여넣기로 첨부할 수 있습니다(이미지 입력을 지원하는 모델에서).
 
 ✅ **확인**: 파일 멘션(`@`)에 대한 한국어 설명을 받고, `Shift+Tab`으로 세 모드를 순환하며,
 `/model`로 모델을 한 번 바꿔 봤다면 완료입니다.
+
+> 💪 **더 해보기**: 거친 문장을 입력한 뒤 `/refine`으로 명확한 프롬프트로 다듬어 실행하고,
+> `/usage`로 이번 세션의 AI Credit·토큰 사용량을 확인해 보세요.
 
 ## 실습 2. `.github/` 설정으로 Copilot 조종하기
 
@@ -291,6 +296,9 @@ Copilot은 작업 디렉토리의 `.github/` 설정과 `AGENTS.md`를 읽어 **�
 ✅ **확인**: `/env`에 `copilot-instructions.md`·`instructions/*`가 보이고, 마지막 질문에 Copilot이
 "커밋 메시지는 영문 Conventional Commits" 같은 **이 저장소의 규칙**을 답하면 성공입니다. 같은 질문도
 `.github/` 설정에 따라 답이 달라진다는 것을 확인한 것입니다.
+
+> 💪 **더 해보기**: `/instructions`로 인스트럭션 파일을 하나 꺼 보고 같은 질문을 다시 던져
+> 답이 어떻게 달라지는지 관찰한 뒤, 다시 켜 두세요.
 
 > 📄 `SKILL.md`·`*.agent.md` 형식과 재사용 범위는 [Custom Agent·Skill 만들기](#custom-agentskill-만들기) 참고.
 
@@ -357,6 +365,10 @@ Rubber duck처럼 자동으로만 호출되는 일부 내장 에이전트는 선
 ✅ **확인**: `/agent` 목록에 7개 에이전트가 보이고, `reviewer`가 읽기 전용으로 코드 리뷰를 내놓으면
 완료입니다. (패턴별 팀 구성·협업 흐름은 [Custom Agent·Skill 만들기](#custom-agentskill-만들기) 참고)
 
+> 💪 **더 해보기**: `orchestrator`에게 "01 예제에 재시도 로직을 구현해줘"처럼 **구현형** 요청을 던져
+> 📐 Planner-Executor 패턴이 자동 선택되는지, "SequentialBuilder와 GroupChatBuilder 중 뭐가 나을까?"
+> 같은 **비교형** 질문에 ⚔️ Debate & Critic이 선택되는지 확인해 보세요.
+
 ## 실습 4. MCP로 외부 도구 연결
 
 > 🎯 MCP 서버를 연결해 외부 도구를 쓴다 · ⏱️ 약 10분
@@ -409,6 +421,9 @@ Workspace servers:
 사용자 설정이나 플러그인이 있으면 별도 섹션이 추가될 수 있습니다. 내장 GitHub MCP는 Workspace 서버가
 아니므로 위 목록에 없어도 정상입니다.
 
+> 💡 세션 밖 터미널에서 `copilot mcp add --transport http <이름> <URL>`로 HTTP 서버를 바로 추가할
+> 수도 있습니다(유저 레벨 `~/.copilot/mcp-config.json`에 저장). 세션 안에서는 `/mcp add`를 사용합니다.
+
 > 💡 **Azure 인증 없이 진행 가능**: `azure-lab`을 사용하지 않아도
 > `microsoft-learn-lab`만으로 이 실습을 끝낼 수 있습니다. Azure 설정은 목록에 나타나더라도 실제 도구
 > 호출 때 인증이 필요할 수 있으므로, 최종 확인은 아래 검색 요청으로 합니다.
@@ -427,6 +442,9 @@ Copilot이 Microsoft Learn MCP 도구를 호출해 공식 문서를 가져와 �
 
 ✅ **확인**: `copilot mcp list`에 두 Workspace 서버가 보이고, 위 요청에 Copilot이 Learn 문서를 검색해 요약하면
 완료입니다. (Azure 없이 Microsoft Learn 서버만으로 가능)
+
+> 💪 **더 해보기**: 내장 GitHub MCP로 "이 저장소의 열린 이슈/PR을 요약해줘"를 요청해 보고,
+> `/mcp add`로 관심 있는 공개 MCP 서버를 하나 추가한 뒤 `/env`에서 도구 목록을 확인해 보세요.
 
 ## 실습 5. 바이브 코딩 — 설정만으로 코드 생성·리뷰
 
@@ -487,20 +505,25 @@ python3 -m py_compile src/04_concurrent_workflow.py   # 오류 없으면 아무 
 ✅ **확인**: `.github/` 설정만으로 규칙에 맞는 새 에이전트 코드를 생성·리뷰하게 만들 수 있으면 이
 실습의 목표를 달성한 것입니다.
 
+> 💪 **더 해보기**: (선택, Python 설치 시) `pip install -r requirements.txt` 후
+> `python -m unittest discover -s tests`로 오프라인 회귀 테스트를 돌려 보세요 — 새 리뷰어를 추가해도
+> 테스트가 통과해야 합니다(Azure 불필요). 실제 실행까지 하려면
+> [Azure 리소스 준비 가이드](docs/azure-setup.md)를 참고하세요.
+
 ## 실습 6. 자동화 — Plan · Autopilot · 서브에이전트 · 스케줄
 
-> 🎯 Plan·Autopilot·서브에이전트·스케줄로 자동화한다 · ⏱️ 약 5분
+> 🎯 계획 수립 → 비대화형 실행 → 예약 실행을 직접 돌려 자동화를 검증한다 · ⏱️ 약 10분
 
 손을 덜 대고 작업을 끝까지 진행시키는 방법들입니다.
 
 | 기능 | 명령 | 설명 |
 |------|------|------|
 | **Plan 모드** | `Shift+Tab` 또는 `/plan` | 실행 전 구현 계획을 먼저 수립 |
-| **Autopilot** | `copilot --autopilot` 또는 `/autopilot` | 완료 조건까지 후속 턴을 이어서 실행 |
+| **Autopilot** | `copilot --autopilot` 또는 `/autopilot [목표]` | 완료 조건까지 후속 턴을 이어서 실행. `--max-ai-credits`로 크레딧 상한 지정 가능 |
 | **권한 자동 승인** | `/allow-all`, `--allow-all`, `--yolo` | 도구·경로·URL 승인 생략(Autopilot과 별도) |
 | **병렬 서브에이전트** | `/fleet` | 여러 서브에이전트를 병렬 실행, `/tasks`로 관리 |
 | **예약 실행(실험적)** | `/every <주기> <프롬프트>` · `/after <지연> <프롬프트>` | 세션이 열린 동안 반복/일회성 프롬프트 예약 |
-| **클라우드 위임** | `/delegate` | 세션을 GitHub에 보내 Copilot이 PR 생성 |
+| **클라우드 위임** | `/delegate` | 세션을 GitHub에 보내 Copilot이 PR 생성 (`--base`로 대상 브랜치 지정) |
 | **비대화형 실행** | `copilot -p "..." --allow-all-tools` | 스크립트·CI·cron 등에서 한 번 실행 후 종료 |
 | **세션 재개** | `copilot --continue` / `/resume` | 직전/특정 세션을 컨텍스트째 이어서 |
 
@@ -508,13 +531,30 @@ python3 -m py_compile src/04_concurrent_workflow.py   # 오류 없으면 아무 
 > 따라 노출이 다를 수 있고, 클라우드 샌드박스는 조직/엔터프라이즈 정책 활성화가 필요합니다. 현재 지원
 > 여부는 `/help`로 확인하세요.
 
+**1) Plan 모드로 계획부터** — 세션에서:
+
 ```text
 > /plan
 > 새 RAG 예제를 추가하는 작업을 단계로 나눠줘
 # 계획이 마음에 들면 Shift+Tab으로 다음 모드로 전환해 실행
+```
+
+**2) 비대화형 1회 실행** — **새 터미널**(세션 밖)에서 직접 실행해 봅니다:
+
+```bash
+copilot -p "src 디렉토리의 파이썬 파일 개수와 각 파일의 역할을 표로 정리해줘" --allow-all-tools -s
+```
+
+`-p`는 프롬프트 한 번 실행 후 종료(CI·스크립트용)하고, `-s`(`--silent`)는 통계 없이 응답만
+출력합니다. 몇 초 뒤 터미널에 표가 출력되면 성공입니다.
+
+**3) 예약 실행(실험적)** — 예약이 실제로 울리는지 확인합니다:
+
+```text
 > /experimental on
-> /every 1h 프런트엔드 테스트를 실행하고 실패만 보고해줘
-> /after 20m 현재 작업 상태를 요약해줘
+> /after 1m 현재 시각과 함께 "예약 실행 성공"이라고 출력해줘
+# 1분 뒤 예약된 프롬프트가 자동 실행되는 것을 확인합니다 (세션이 열려 있는 동안만 동작)
+> /every 1h 프런트엔드 테스트를 실행하고 실패만 보고해줘   # 반복 예약 — 확인했으면 중지해도 됩니다
 ```
 
 > ⚠️ Autopilot은 작업을 연속 진행하지만 도구 권한을 자동 승인하지는 않습니다. `/allow-all`·`--yolo`를
@@ -523,8 +563,12 @@ python3 -m py_compile src/04_concurrent_workflow.py   # 오류 없으면 아무 
 > `/every`와 `/after`는 현재 실험적 기능입니다. `/experimental on` 또는 시작 옵션 `--experimental`이
 > 필요하며, 예약한 세션이 열려 있을 때만 실행됩니다.
 
-✅ **확인**: `/plan`으로 계획을 받고, Autopilot과 권한 자동 승인의 차이 및 `/every`·`/after`·`/fleet`·
-`/tasks`·`/delegate`의 용도를 이해했다면 완료입니다.
+✅ **확인**: `/plan`으로 계획을 받고, `copilot -p ... -s`가 응답만 출력하며, `/after 1m` 예약이
+1분 뒤 실제로 실행되면 완료입니다.
+
+> 💪 **더 해보기**: `copilot -p "..." --output-format json`으로 JSONL 출력을 받아 스크립트에서
+> 파싱해 보고, `/fleet`를 켠 뒤 여러 파일에 걸친 작업을 요청해 `/tasks`로 병렬 서브에이전트의
+> 진행 상황을 관찰해 보세요.
 
 ## 실습 7. 가드레일(AGENTS.md)로 안전하게 커밋·PR
 
@@ -559,6 +603,11 @@ git push --force-with-lease origin <branch>     # force push
 
 ✅ **확인**: 기능 브랜치에서 영문 Conventional Commits로 커밋하고 `--draft --base main`으로 PR을 만들
 수 있으면 완료입니다. Copilot에게 커밋/PR을 맡겨도 이 가드레일을 따릅니다.
+
+> 💪 **더 해보기**: 브랜치 생성부터 커밋·Draft PR 생성까지 통째로 Copilot에게 맡겨 보세요
+> ("실습 5의 변경을 가드레일에 맞춰 커밋하고 Draft PR을 만들어줘"). `AGENTS.md` 규칙(영문 커밋 메시지·
+> `--draft --base main`)을 스스로 지키는지 관찰한 뒤, 일부러 "main에 바로 push해줘"라고 요청해
+> 거부하는지도 확인해 보세요.
 
 ## 실습 8. 나만의 Custom Agent 만들기
 
@@ -616,14 +665,20 @@ copilot --agent doc_writer
 
 > 🧹 실습용으로 만든 `.github/agents/doc_writer.agent.md`는 커밋하지 않을 거면 삭제해도 됩니다.
 
+> 💪 **더 해보기**: 짝이 되는 `test_writer` 에이전트(역할: 오프라인 단위 테스트 작성, tools:
+> `read`·`edit`·`execute`)를 만들어 doc_writer가 문서화한 함수의 테스트를 작성하게 해 보세요.
+> `execute`를 준 에이전트만 테스트를 실행할 수 있다는 차이도 확인할 수 있습니다.
+
 ### 🎉 실습편 완료 — 다음 단계
 
-여기까지 따라왔다면(약 90분) Copilot CLI의 핵심 흐름(설치·인증 → 설정으로 조종 → 에이전트·MCP →
+여기까지 따라왔다면(약 95분) Copilot CLI의 핵심 흐름(설치·인증 → 설정으로 조종 → 에이전트·MCP →
 바이브 코딩 → 자동화 → 가드레일 → 나만의 에이전트 만들기)을 한 번씩 경험한 것입니다. 이제:
 
 - 전체 슬래시 커맨드·단축키·플래그·설정은 [③ 레퍼런스편](#슬래시-커맨드-전체)에서 찾아보세요.
 - 나만의 에이전트·스킬을 만들려면 [Custom Agent·Skill 만들기](#custom-agentskill-만들기)를 보세요.
 - `src/` 예제를 자연어 프롬프트만으로 다시 만들어 보려면 [src 예제 코드를 만드는 프롬프트 모음](#src-예제-코드를-만드는-프롬프트-모음)을 참고하세요.
+- 예제를 **실제 Azure에서 실행**해 보려면 [Azure 리소스 준비 가이드](docs/azure-setup.md)를 따라
+  리소스를 만들고 `.env`를 채우세요.
 
 ---
 
@@ -650,10 +705,10 @@ copilot --agent doc_writer
 
 | 커맨드 | 설명 |
 |--------|------|
-| `/model` | 모델 선택 (`auto` 가능) |
-| `/delegate` | 세션을 GitHub에 보내 Copilot이 PR 생성 |
+| `/model` | 모델 선택 (`auto` 가능, `plan`으로 Plan 모드 전용 모델 지정) |
+| `/delegate` | 세션을 GitHub에 보내 Copilot이 PR 생성 (`--base`로 대상 브랜치 지정) |
 | `/fleet` | 병렬 서브에이전트 실행 모드 |
-| `/autopilot` | Autopilot 모드 토글 |
+| `/autopilot` | Autopilot 모드 토글 — `/autopilot <목표>`로 목표 지정, `--max-ai-credits` 상한 |
 | `/tasks` | 서브에이전트와 셸 명령 태스크 조회·관리 |
 | `/subagents` | 기본·에이전트별 서브에이전트 모델 설정 |
 | `/plan` | 코딩 전 구현 계획 작성 |
@@ -677,9 +732,10 @@ copilot --agent doc_writer
 
 | 커맨드 | 설명 |
 |--------|------|
+| `/permissions` | 권한 모드 전환 (실험적 `assisted` 승인 판정 포함) |
 | `/allow-all` | 모든 권한 활성화 (도구·경로·URL) |
 | `/sandbox` | 로컬 샌드박스 토글 (`/sandbox enable`, 공개 미리보기) |
-| `/add-dir` · `/list-dirs` | 파일 접근 허용 디렉토리 추가·표시 |
+| `/add-dir` · `/list-dirs` | 파일 접근 허용 디렉토리 추가(해당 디렉토리의 `.github` 스킬·에이전트도 신뢰 로드)·표시 |
 | `/cwd` · `/cd` | 작업 디렉토리 변경·표시 |
 | `/reset-allowed-tools` | 허용된 도구 목록 초기화 |
 
@@ -688,6 +744,7 @@ copilot --agent doc_writer
 | 커맨드 | 설명 |
 |--------|------|
 | `/resume` · `/rename` · `/new` | 세션 전환·이름 변경·새 대화 |
+| `/fork` | 현재 세션을 새 세션으로 분기 (이름 지정 가능) |
 | `/session` · `/clear` | 세션 조회·관리 / 현재 세션 폐기 후 새로 시작 |
 | `/context` · `/usage` | 토큰 사용량 시각화 / 세션 통계(AI Credits·시간·편집 라인·모델별 토큰) |
 | `/compact` | 히스토리 요약으로 컨텍스트 절약 (95% 근접 시 자동) |
@@ -709,7 +766,7 @@ copilot --agent doc_writer
 | `/instructions` | 인스트럭션 파일 확인·토글 |
 | `/voice` | 음성 입력(받아쓰기) 모드 |
 | `/theme` · `/statusline` · `/footer` | 색상·상태줄 설정 |
-| `/settings` | CLI 설정 UI 또는 개별 설정값 조회·변경 |
+| `/settings` | CLI 설정 UI 또는 개별 설정값 조회·변경 (`--repo`/`--local`로 리포 설정 대상) |
 | `/experimental` | 실험적 기능 관리 |
 | `/feedback` | 피드백 제출 |
 | `/login` · `/logout` · `/user` | 로그인·로그아웃·GitHub 사용자 목록 관리 |
@@ -727,8 +784,8 @@ copilot --agent doc_writer
 |--------|------|--------|------|
 | `Shift+Tab` | Interactive → Plan → Autopilot 순환 | `Ctrl+T` | 추론 과정 표시 토글 |
 | `Ctrl+S` | 프롬프트 임시 저장/복원 | `Ctrl+Q` | 프롬프트 대기열에 추가 |
-| `Ctrl+R` | 히스토리 역방향 검색 | `Ctrl+O`/`Ctrl+E` | 타임라인 확장 |
-| `Ctrl+C` | 취소 (`×2` 종료) | `Esc` | 현재 작업 취소 |
+| `Ctrl+R` | 히스토리 역방향 검색 | `Ctrl+O` | 타임라인 전체 토글 |
+| `Ctrl+C` | 취소 (`×2` 종료) | `Esc` | 진행 중 작업 중지 (`×2` 입력 지우기·에이전트 중지·리와인드) |
 | `Ctrl+D` | 종료 | `Ctrl+Z` | 일시 중단 |
 | `Ctrl+L` | 화면 지우기 | `Ctrl+X → B` | 현재 작업 백그라운드로 |
 | `Ctrl+X → O` | 최근 링크 열기 | `↑` `↓` | 명령 히스토리 |
@@ -750,15 +807,22 @@ copilot --agent orchestrator --autopilot --yolo
 | 플래그 | 설명 |
 |--------|------|
 | `--agent <name>` | 특정 에이전트로 시작 |
-| `-p, --prompt "..."` | 비대화형으로 프롬프트 전달(스크립트·CI) |
-| `--mode <interactive|plan|autopilot>` | 시작 모드를 명시 |
-| `--plan` | Plan 모드로 시작 |
-| `--autopilot` | Autopilot으로 시작 |
+| `-p, --prompt "..."` | 비대화형으로 프롬프트 전달(스크립트·CI) — 완료 후 종료 |
+| `-s, --silent` | 통계 없이 응답만 출력 (`-p` 스크립팅용) |
+| `--output-format <text\|json>` | 출력 형식 — `json`은 JSONL(줄 단위 JSON) |
+| `-i, --interactive "..."` | 대화형으로 시작하며 첫 프롬프트 자동 실행 |
+| `--mode <interactive\|plan\|autopilot>` | 시작 모드를 명시 |
+| `--plan` | Plan 모드로 시작 (`--mode autopilot`과 조합 시 계획 자동 승인 후 자율 구현) |
+| `--autopilot` | Autopilot으로 시작 (`--max-autopilot-continues`로 연속 턴 상한) |
 | `--model <model>` | 시작 모델 선택 (`auto` 가능) |
+| `--effort <level>` | 추론 강도 지정 (`low`·`medium`·`high` 등) |
+| `--max-ai-credits <n>` | 세션 AI Credit 상한 |
 | `--yolo` / `--allow-all` | 자동 승인 — 모든 도구·경로·URL 허용 |
-| `--cloud` | 클라우드 샌드박스 세션으로 시작 (공개 미리보기, 조직 정책 필요) |
+| `-C <directory>` | 시작 전 작업 디렉토리 변경 |
+| `--cloud` | 클라우드 샌드박스 세션으로 시작 (공개 미리보기 — 버전·정책에 따라 미노출) |
 | `--continue` | 가장 최근 로컬 세션 이어서 |
-| `--resume` | 세션을 골라 재개 |
+| `-r, --resume [id]` | 세션을 골라 재개 (ID·이름 지정 가능) |
+| `-n, --name <name>` | 새 세션 이름 지정 |
 | `--banner` | 시작 배너 다시 표시 |
 | `--experimental` | 실험적 기능 활성화 |
 
@@ -797,7 +861,8 @@ npm install -g @github/copilot       # @prerelease 로 프리릴리즈
 AGENTS.md (git 루트 & cwd) · CLAUDE.md · GEMINI.md
 .github/copilot-instructions.md
 .github/instructions/**/*.instructions.md
-~/.copilot/copilot-instructions.md  (+ COPILOT_CUSTOM_INSTRUCTIONS_DIRS)
+~/.copilot/copilot-instructions.md · ~/.copilot/instructions/**/*.instructions.md
+COPILOT_CUSTOM_INSTRUCTIONS_DIRS (추가 디렉토리)
 ```
 
 ## Custom Agent·Skill 만들기
@@ -873,6 +938,7 @@ model: auto                                         # 선택
 | 응답 품질 저하 / 컨텍스트 초과 | 대화가 너무 김 | `/compact`·`/context`·`/clear` (95% 근접 시 자동 압축) |
 | Node.js 버전 오류 | Node 22 미만 | `node -v` 확인 후 22+ 설치 (<https://nodejs.org>) |
 | `pip install` 의존성 해석 실패 | 개별 SDK를 임의 버전으로 섞음 | 새 가상환경에서 루트 `requirements.txt`의 고정 버전을 함께 설치 |
+| `pip install`이 고정 버전을 못 찾음 | 사내 pip 미러가 최신 버전 미동기화 | `pip index versions <패키지>`로 가용 버전 확인 후 잠시 뒤 재시도, 또는 기본 PyPI 인덱스 사용 |
 
 ## 더 알아보기
 
@@ -881,6 +947,8 @@ model: auto                                         # 선택
   [Copilot 플랜 및 가격](https://github.com/features/copilot/plans)
 - [GitHub 멀티 계정 설정 가이드](docs/github-multi-account-setup.md) — 한 머신에서 Git 작업용 계정과
   Copilot 구독 계정을 분리해 사용하는 방법
+- [Azure 리소스 준비 가이드](docs/azure-setup.md) — `src/` 예제 실행에 필요한 Foundry 프로젝트·
+  모델 배포·AI Search를 만들고 `.env`를 채우는 방법
 - 세션에서 `copilot help config` · `copilot help environment` · `copilot help permissions`로 추가 정보 확인
 
 ## 프로젝트 구조
@@ -900,7 +968,7 @@ model: auto                                         # 선택
 │   │   └── agent-framework-codegen/SKILL.md   # MAF 코드 생성 패턴
 │   └── workflows/
 │       └── smoke.yml               # 의존성·컴파일·오프라인 테스트 CI
-├── docs/                           # GitHub 멀티 계정 설정 가이드
+├── docs/                           # Azure 리소스 준비 · GitHub 멀티 계정 설정 가이드
 ├── tests/                          # 임포트·워크플로우 출력 회귀 테스트
 └── src/                            # 바이브 코딩 예시 도메인 (Microsoft Agent Framework 예제)
 ```
@@ -914,7 +982,8 @@ model: auto                                         # 선택
 이름·역할, 시나리오 입력, 패턴별 설정값)만 구체적으로 적으면 됩니다. 아래 프롬프트를 `copilot`
 세션에서 위에서 아래로 실행하면 현재 파일과 가깝게 재현됩니다. (모델 출력이라 세부 구현·문구는
 조금씩 다를 수 있습니다. 더 똑같이 만들려면 해당 `src/*.py`를 함께 첨부해 "이 파일처럼"이라고
-지시하세요.)
+지시하세요.) 생성한 예제를 **실제로 실행**하려면 [Azure 리소스 준비 가이드](docs/azure-setup.md)로
+리소스를 만들고 `.env`를 채운 뒤 `python src/01_single_agent.py`처럼 실행합니다.
 
 > 💡 아래 각 코드 블록은 **한 번에 입력하는 하나의 프롬프트**입니다(`>`는 프롬프트 시작 표시, `-`
 > 줄은 같은 프롬프트에 포함되는 요구사항). 스트리밍 헬퍼 `_streaming.py`(전 예제 공유), 인덱싱 대기
